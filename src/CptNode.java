@@ -65,7 +65,7 @@ public class CptNode {
 
     public String printDefinitionDetails(){
         return "For: " + CptNode.name + "\n" +
-                "Given: " + CptNode.outcome + "\n" +
+                "Given: " + CptNode.given + "\n" +
                 "Table: " + CptNode.probTable;
     }
 
