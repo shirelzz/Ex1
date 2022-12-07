@@ -8,8 +8,8 @@ public class CptNode {
     private String name;
     private ArrayList<String> outcome;
     private ArrayList<String> parents;
-//    private ArrayList<CptNode> children;
-    private  ArrayList<String> probTable;
+    private ArrayList<String> children;
+    private ArrayList<String> probTable;
 
     /*
     Constructor
@@ -18,7 +18,7 @@ public class CptNode {
         this.outcome = new ArrayList<String>(2) ;
         this.parents = new ArrayList<String>() ;
         this.probTable = new ArrayList<String>(1);
-
+        this.children = new ArrayList<String>() ;
     }
 
     public void setName(String name){
@@ -43,22 +43,35 @@ public class CptNode {
         return this.parents;
     }
 
-//    public void addChild (Node cptNodeChild) {
-//        CptNode.children.add((CptNode) cptNodeChild);
-//    }
+    public boolean hasParents(){
+        return this.getParents().size() > 0;
+    }
+
+    public void addChild (String s) {
+        this.children.add(s);
+    }
+
+    public ArrayList<String> getChildren(){
+        return this.children;
+    }
+
+    public boolean hasChildren(){
+        return this.getChildren().size() > 0;
+    }
 
     public void addProbTable (String s) {
         probTable.add(s);
     }
 
     public ArrayList<String> getProbTable(){
-        return probTable;
+        return this.probTable;
     }
 
     public String printVariableDetails(){
         return "Name: " + this.name + "\n" +
                 "Outcomes: " + this.outcome + "\n" +
                 "Parents: " + this.parents + "\n" +
+                "Children: " + this.children + "\n" +
                 "Table: " + this.probTable + "\n" ;
     }
 

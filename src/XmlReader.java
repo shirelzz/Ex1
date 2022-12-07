@@ -37,6 +37,7 @@ public class XmlReader {
                 for (int i = 0; i < variableList.getLength(); i++) {
                     Node variable = variableList.item(i);
                     CptNode varNode = new CptNode();
+
                     if (variable.getNodeType() == Node.ELEMENT_NODE) {
                         Element variableElement = (Element) variable;
                         varName = variableElement.getElementsByTagName("NAME").item(0).getTextContent();
@@ -89,6 +90,19 @@ public class XmlReader {
 
                 }
 
+                for (int i = 0; i<network.size(); i++){
+                    CptNode curr = network.get(i);
+                    if (curr.hasParents()){
+                        for (int j =0; j<curr.getParents().size(); j++){
+                            CptNode parent;
+                            String parentName = curr.getParents().get(j);
+                            String childName = curr.getName();
+                            int index = network.find(parentName);
+                            network.get(index).addChild(childName);
+                        }
+                    }
+                }
+
 
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
@@ -98,7 +112,6 @@ public class XmlReader {
                 e.printStackTrace();
             }
         }
-
         return network;
     }
 }

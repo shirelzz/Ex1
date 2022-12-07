@@ -24,7 +24,18 @@ public class BayesianNetwork {
         for (int i = 0; i < network.size(); i++) {
             System.out.println(network.get(i).printVariableDetails());
         }
+    }
 
+    public int find(String s){
+        int k = 0;
+        for (int i = 0; i<this.network.size(); i++){
+            CptNode curr = this.network.get(i);
+            if (curr.getName().equals(s)){
+                k = i;
+                break;
+            }
+        }
+        return k;
     }
 
 }
