@@ -2,27 +2,35 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Ex1 {
     public static void main(String[] args) throws IOException {
 
         answerQueries("input.txt");
+
     }
 
     public static void answerQueries(String inputFileName){
 
         //input file
         String xmlFileName = "";
+        String queries = "";
+        ArrayList<String> questions = new ArrayList<>();
+
         try {
             File inputFile = new File(inputFileName);
             Scanner myReader = new Scanner(inputFile);
             xmlFileName = myReader.nextLine();
 
             while (myReader.hasNextLine()) {
-                String queries = myReader.nextLine();
-                System.out.println(queries);
+                questions.add(myReader.nextLine());
+//                queries = myReader.nextLine();
+//                System.out.println(queries);
             }
+            System.out.println(questions);
+
             System.out.println("");
             myReader.close();
 
@@ -33,23 +41,48 @@ public class Ex1 {
         // xml file
         XmlReader xmlReader = new XmlReader();
         BayesianNetwork network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/" + xmlFileName);
-        network.printNet();
+//        network.printNet();
 
         //answers
         String output = "";
 
-        //Bayes rule || Joint distribution
+        //1st algorithm: Bayes rule || Joint distribution
+        for (String query : questions) {
+            Algorithms jd = new Algorithms(query, network, 1);
+            output += (jd.getAnswer() + "," + jd.getAddActions() + "," + jd.getMultiplyActions()) + "\n";
+            System.out.println(query + ":" + "\n" + "Answer = " + jd.getAnswer() + "\n" +
+                    "Total number of additions = " + jd.getAddActions() + "\n" +
+                    "Total number of multiplications = " + jd.getMultiplyActions() +"\n");
+
+        }
 
 
-        // variable elimination #1
+
+        //2nd algorithm: variable elimination #1
+        output = "";
+        for (String query : questions) {
+            Algorithms ve1 = new Algorithms(query, network, 2);
+            output += (ve1.getAnswer() + "," + ve1.getAddActions() + "," + ve1.getMultiplyActions()) + "\n";
+            System.out.println(query + ":" + "\n" + "Answer = " + ve1.getAnswer() + "\n" +
+                    "Total number of additions = " + ve1.getAddActions() + "\n" +
+                    "Total number of multiplications = " + ve1.getMultiplyActions() +"\n");
+
+        }
 
 
-        // variable elimination #2
+
+        //3rd algorithm: variable elimination #2
+        output = "";
+        for (String query : questions) {
+            Algorithms ve2 = new Algorithms(query, network, 3);
+            output += (ve2.getAnswer() + "," + ve2.getAddActions() + "," + ve2.getMultiplyActions()) + "\n";
+            System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
+                    "Total number of additions = " + ve2.getAddActions() +"\n" +
+                    "Total number of multiplications = " + ve2.getMultiplyActions()+"\n");
+        }
 
 
-
-
-        //extract output
+        //extract output text file
         try {
             FileWriter myWriter = new FileWriter("output.txt");
             myWriter.write(output);

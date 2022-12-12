@@ -21,8 +21,8 @@ public class BayesianNetwork {
     }
 
     public void printNet(){
-        for (int i = 0; i < network.size(); i++) {
-            System.out.println(network.get(i).printVariableDetails());
+        for (CptNode cptNode : network) {
+            System.out.println(cptNode.printVariableDetails());
         }
     }
 

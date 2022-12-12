@@ -15,10 +15,10 @@ public class CptNode {
     Constructor
      */
     CptNode() throws IOException, SAXException {
-        this.outcome = new ArrayList<String>(2) ;
-        this.parents = new ArrayList<String>() ;
-        this.probTable = new ArrayList<String>(1);
-        this.children = new ArrayList<String>() ;
+        this.outcome = new ArrayList<>(2) ;
+        this.parents = new ArrayList<>();
+        this.probTable = new ArrayList<>(1);
+        this.children = new ArrayList<>();
     }
 
     public void setName(String name){
