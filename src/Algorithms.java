@@ -37,7 +37,6 @@ public class Algorithms {
             return ans;
         }
         else {
-            HashMap<String, String> allVars = new HashMap<>();
 
             //Save evidence variables outcomes
             HashMap<String, String> evidenceVars = new HashMap<>();
@@ -48,17 +47,6 @@ public class Algorithms {
             for (int i = 0; i<numerator.length; i++){
                 String[] varName_outcome = numerator[i].split("=");       //e.g. [B,T]
                 evidenceVars.put(varName_outcome[0], varName_outcome[1]);
-                allVars.put(varName_outcome[0], varName_outcome[1]);
-            }
-
-            //Hidden variables outcomes (permutations, save)
-            HashMap<String, String> hiddenVars = new HashMap<>();
-            int numOfPerms = 1;
-            for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations on the hidden variables
-                numOfPerms *= this.hidden.get(i).getOutcomes().size();
-            }
-            for (int i = 0; i<numOfPerms; i++){
-
             }
 
 
@@ -67,10 +55,10 @@ public class Algorithms {
 
 
             if (algo == 1){
-                ans = jointProb(q);
+                ans = jointProb(q, evidenceVars);
             }
             if (algo == 2){
-                ans = eliminateBySize(q);
+                ans = eliminateBySize(q, evidenceVars);
             }
 //        else if (algo == 3){
 //            ans = heuristicElimination(q);
@@ -79,8 +67,32 @@ public class Algorithms {
         return ans;
     }
 
-    public double jointProb(String q){ //P(B=T|J=T,M=T)
-        double ans=0;
+    public double jointProb(String q, HashMap evidenceVars){ //P(B=T|J=T,M=T)
+        double res=1;
+        double ans = 0;
+
+
+        //Hidden variables outcomes (permutations, save)
+        HashMap<String, String> hiddenVars = new HashMap<>();
+        for (int j = 0; j<this.hidden.size(); j++){
+            CptNode currHidden = this.hidden.get(j);
+            hiddenVars.put(currHidden.getName(), currHidden.getOutcomes().get(0));
+        }
+
+        int numOfPerms = 1;
+        for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations for the hidden variables
+            numOfPerms *= this.hidden.get(i).getOutcomes().size();
+        }
+
+        ArrayList<HashMap<String,String>> perms = new ArrayList<>();
+        perms = getPerms(hiddenVars, evidenceVars, numOfPerms);
+        for (int i = 0; i<numOfPerms; i++){
+            HashMap<String, String> currQuery = new HashMap<>();
+            currQuery.putAll(evidenceVars);
+            currQuery.putAll(perms.get(i));
+            res += calcProb(currQuery);
+            this.addAct++;
+        }
 
 
         String newQ = "";
@@ -101,14 +113,14 @@ public class Algorithms {
                 newQ += evidenceVar.getName() + "=" ;
 
             for (int i = 0; i<numOfPerm; i++){
-                multi *= calcProb(newQ);
+//                multi *= calcProb(newQ);
                 this.multiAct++;
             }
             sum += multi;
             this.addAct++;
 
 
-            calcProb(q);
+//            calcProb(q);
         }
         else {
             ans = getProbFromCPT();
@@ -119,17 +131,47 @@ public class Algorithms {
         return ans;
     }
 
-    public double eliminateBySize(String q){
+    public ArrayList<HashMap<String, String>> getPerms(HashMap hidden, HashMap evidence, int numOfPerms){
+        ArrayList<HashMap<String,String>> permutations = new ArrayList<>();
+        int k = 0;
+        while (k<numOfPerms){
+            HashMap<String,String> curr = new HashMap<>();
+            for (int i = 0; i<evidence.size(); i++){  //copy evidence variables
+                CptNode currEvi = this.evidence.get(i);
+                String currName = currEvi.getName();
+                String currOut = currEvi.getOutcomes().get(0);
+                curr.put(currName, currOut);
+            }
+
+
+            for (int i = 1; i<numOfPerms; i++){ //create permutation
+
+            }
+            permutations.add(curr);
+            k++;
+        }
+
+
+        for (int i = 0; i<this.hidden.size(); i++){  //get number of outcomes for each hidden variable
+            this.hidden.get(i);
+        }
+
+        HashMap<String,String> permutation = new HashMap<>();
+
+        permutations.add(permutation);
+
+        return permutations;
+    }
+
+    public double eliminateBySize(String q, HashMap evidenceVars){
         double ans = 0;
 
         return ans;
     }
 
-    public double calcProb(String q){
+    public double calcProb(HashMap currQuery){
         double ans =0;
-        String numerator = q.replace("|", ",");
-        String denominator = q.substring(6, q.length());
-        String newQ = "P(";
+
 //        if (){
 //
 //        }

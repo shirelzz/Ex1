@@ -17,25 +17,44 @@ public class Ex1 {
 
         String query = "P(B=T)";
 
-        String numeratorStr = q.replace("|", ",");  //P(B=T,J=T,M=T)
-        System.out.println(numeratorStr);
-        numeratorStr = numeratorStr.substring(2, numeratorStr.length()-1);
-        System.out.println(numeratorStr);
-        String[] numerator = numeratorStr.split(",");
-        for (int i = 0; i< numerator.length; i++){
-            System.out.println(numerator[i]);
-        }
-        HashMap<String, String> evidenceVars = new HashMap<>();
 
-        for (int i = 0; i<numerator.length; i++){
-            String[] varName_outcome = numerator[i].split("=");
-            System.out.println(varName_outcome[0]);//e.g. [B,T]
-            System.out.println(varName_outcome[1]);//e.g. [B,T]
 
-            evidenceVars.put(varName_outcome[0], varName_outcome[1]);
-        }
-        System.out.println(evidenceVars);
-        System.out.println(evidenceVars.get("J"));
+//        String numeratorStr = q.replace("|", ",");  //P(B=T,J=T,M=T)
+//        System.out.println(numeratorStr);
+//        numeratorStr = numeratorStr.substring(2, numeratorStr.length()-1);
+//        System.out.println(numeratorStr);
+//        String[] numerator = numeratorStr.split(",");
+//        for (int i = 0; i< numerator.length; i++){
+//            System.out.println(numerator[i]);
+//        }
+//        HashMap<String, String> evidenceVars = new HashMap<>();
+//
+//        for (int i = 0; i<numerator.length; i++){
+//            String[] varName_outcome = numerator[i].split("=");
+//            System.out.println(varName_outcome[0]);//e.g. [B,T]
+//            System.out.println(varName_outcome[1]);//e.g. [B,T]
+//
+//            evidenceVars.put(varName_outcome[0], varName_outcome[1]);
+//        }
+//        System.out.println(evidenceVars);
+//        System.out.println(evidenceVars.get("J"));
+//        HashMap<String, String> vars = new HashMap<>();
+//        vars.putAll(evidenceVars);
+//        System.out.println(vars.get("B"));
+//        vars.put("J","F");
+//        System.out.println(vars);
+//        HashMap<String, String> perm = new HashMap<>();
+//        perm.put("E", "T");
+//        perm.put("A", "T");
+//        HashMap<String, String> all = new HashMap<>();
+//        all.putAll(evidenceVars);
+//        all.putAll(perm);
+//        System.out.println(all);
+
+
+
+
+
 
 
 //        answerQueries("input.txt");
