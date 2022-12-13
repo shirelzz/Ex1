@@ -2,14 +2,17 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CptNode {
 
     private String name;
     private ArrayList<String> outcome;
     private ArrayList<String> parents;
+    private ArrayList<CptNode> parentNodes;
     private ArrayList<String> children;
     private ArrayList<String> probTable;
+    private HashMap<String, Double> CPT;
 
     /*
     Constructor
@@ -17,8 +20,10 @@ public class CptNode {
     CptNode() throws IOException, SAXException {
         this.outcome = new ArrayList<>(2) ;
         this.parents = new ArrayList<>();
+        this.parentNodes = new ArrayList<>();
         this.probTable = new ArrayList<>(1);
         this.children = new ArrayList<>();
+        this.CPT = new HashMap<>();
     }
 
     public void setName(String name){
@@ -41,6 +46,12 @@ public class CptNode {
 
     public ArrayList<String> getParents(){
         return this.parents;
+    }
+
+    public void addParentNode(CptNode parent) { parentNodes.add(parent);}
+
+    public ArrayList<CptNode> getParentNodes(){
+        return this.parentNodes;
     }
 
     public boolean hasParents(){
@@ -67,11 +78,21 @@ public class CptNode {
         return this.probTable;
     }
 
+    public void addToCPT(String s, double d){
+
+        this.CPT.put(s,d);
+    }
+
+    public HashMap<String, Double> getCPT(){
+        return this.CPT;
+    }
+
     public String printVariableDetails(){
         return "Name: " + this.name + "\n" +
                 "Outcomes: " + this.outcome + "\n" +
                 "Parents: " + this.parents + "\n" +
                 "Children: " + this.children + "\n" +
+                "CPT: " + this.CPT + "\n" +
                 "Table: " + this.probTable + "\n" ;
     }
 

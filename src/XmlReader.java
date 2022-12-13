@@ -9,6 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class XmlReader {
 
@@ -103,8 +104,63 @@ public class XmlReader {
                     }
                 }
 
+                //add parents nodes
+                for (int i = 0; i<network.size(); i++) {
+                    CptNode currChild = network.get(i);
+                    String currChildName = currChild.getName();
+                    ArrayList parentsNames = currChild.getParents();
 
-            } catch (ParserConfigurationException e) {
+                    if (parentsNames.size()>0){
+                        for (int k=0; k<network.size(); k++){
+                            CptNode currParentNode = network.get(k);
+                            if (currParentNode.getChildren().contains(currChildName)) {
+                                currChild.addParentNode(currParentNode);
+                            }
+                        }
+                    }
+
+                }
+
+                //add to cpt
+//                for (int i = 0; i<network.size(); i++) {
+//                    CptNode curr = network.get(i);
+//                    ArrayList<CptNode> currParentsNodes = curr.getParentNodes();
+//                    ArrayList<String> currParentsNames = curr.getParents();
+//                    ArrayList<String> currOutcomes = curr.getOutcomes();
+//                    ArrayList<String> currTable = curr.getProbTable();
+//
+//                    if (currParentsNodes.size()>0){
+//                        for (int j = 0; j<currOutcomes.size(); j++){
+//                            int numOfOutcomes = currOutcomes.size();
+//                            int index = 0;
+//                            while (index<numOfOutcomes){
+//                                index++;
+//                            }
+//
+//                                String s = "P(" + curr.getName() + "=" + currOutcomes.get(j) + " | ";
+//                            for (int k = currParentsNodes.size()-1 ; k>=0; k--){
+//                                s += currParentsNames.get(k) + "=" + currParentsNodes.get(k)  + "="
+//                            }
+//
+//                            int tableIndex =
+//
+//                            curr.addToCPT();
+//                        }
+//                    }
+//                    else {
+//                        for (String currOutcome : currOutcomes) {
+//                            for (String currProb : currTable) {
+//                                String s = "P(" + curr.getName() + "=" + currOutcome;
+//                                double prob = Double.parseDouble(currProb);
+//                                curr.addToCPT(s, prob);
+//                            }
+//                        }
+//                    }
+//                }
+
+
+
+                } catch (ParserConfigurationException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();

@@ -26,11 +26,11 @@ public class BayesianNetwork {
         }
     }
 
-    public int find(String s){
+    public int find(String name){
         int k = 0;
         for (int i = 0; i<this.network.size(); i++){
             CptNode curr = this.network.get(i);
-            if (curr.getName().equals(s)){
+            if (curr.getName().equals(name)){
                 k = i;
                 break;
             }

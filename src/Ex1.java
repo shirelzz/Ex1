@@ -48,38 +48,68 @@ public class Ex1 {
 
         //1st algorithm: Bayes rule || Joint distribution
         for (String query : questions) {
-            Algorithms jd = new Algorithms(query, network, 1);
-            output += (jd.getAnswer() + "," + jd.getAddActions() + "," + jd.getMultiplyActions()) + "\n";
-            System.out.println(query + ":" + "\n" + "Answer = " + jd.getAnswer() + "\n" +
-                    "Total number of additions = " + jd.getAddActions() + "\n" +
-                    "Total number of multiplications = " + jd.getMultiplyActions() +"\n");
+            if (query.equals(null)){
+                System.out.println("Error: null query");
+            }
+            else {
+                int algoWanted = Integer.parseInt(query.substring(query.length()-1));
+                String newQuery = query.substring(0,query.length()-1);
+                if (algoWanted == 1){
+                    output = "";
+                    Algorithms jd = new Algorithms(newQuery, network);
+                    jd.addToHidden(newQuery);
+                    jd.addToEvidence(newQuery);
+                    jd.runAlgo(1);
+
+                    output += jd.runAlgo(1) + "," + jd.getAddActions() + "," + jd.getMultiplyActions() + "\n";
+                    System.out.println(query + ":" + "\n" + "Answer = " + jd.runAlgo(1) + "\n" +
+                            "Total number of additions = " + jd.getAddActions() + "\n" +
+                            "Total number of multiplications = " + jd.getMultiplyActions() +"\n");
+                }
+                else if (algoWanted == 2){
+                    output = "";
+                    Algorithms ve1 = new Algorithms(newQuery, network);
+                    ve1.addToHidden(newQuery);
+                    ve1.addToEvidence(newQuery);
+                    ve1.runAlgo(2);
+
+                    output += (ve1.getAnswer() + "," + ve1.getAddActions() + "," + ve1.getMultiplyActions()) + "\n";
+                    System.out.println(query + ":" + "\n" + "Answer = " + ve1.getAnswer() + "\n" +
+                            "Total number of additions = " + ve1.getAddActions() + "\n" +
+                            "Total number of multiplications = " + ve1.getMultiplyActions() +"\n");
+                }
+            }
 
         }
 
 
 
         //2nd algorithm: variable elimination #1
-        output = "";
-        for (String query : questions) {
-            Algorithms ve1 = new Algorithms(query, network, 2);
-            output += (ve1.getAnswer() + "," + ve1.getAddActions() + "," + ve1.getMultiplyActions()) + "\n";
-            System.out.println(query + ":" + "\n" + "Answer = " + ve1.getAnswer() + "\n" +
-                    "Total number of additions = " + ve1.getAddActions() + "\n" +
-                    "Total number of multiplications = " + ve1.getMultiplyActions() +"\n");
-
-        }
+//        output = "";
+//        for (String query : questions) {
+//            Algorithms ve1 = new Algorithms(query, network);
+//            ve1.addToHidden(query);
+//            ve1.addToEvidence(query);
+//            ve1.runAlgo(2);
+//
+//            output += (ve1.getAnswer() + "," + ve1.getAddActions() + "," + ve1.getMultiplyActions()) + "\n";
+//            System.out.println(query + ":" + "\n" + "Answer = " + ve1.getAnswer() + "\n" +
+//                    "Total number of additions = " + ve1.getAddActions() + "\n" +
+//                    "Total number of multiplications = " + ve1.getMultiplyActions() +"\n");
+//
+//        }
 
 
 
         //3rd algorithm: variable elimination #2
-        output = "";
-        for (String query : questions) {
-            Algorithms ve2 = new Algorithms(query, network, 3);
-            output += (ve2.getAnswer() + "," + ve2.getAddActions() + "," + ve2.getMultiplyActions()) + "\n";
-            System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
-                    "Total number of additions = " + ve2.getAddActions() +"\n" +
-                    "Total number of multiplications = " + ve2.getMultiplyActions()+"\n");
-        }
+//        output = "";
+//        for (String query : questions) {
+//            Algorithms ve2 = new Algorithms(query, network);
+//            output += (ve2.getAnswer() + "," + ve2.getAddActions() + "," + ve2.getMultiplyActions()) + "\n";
+//            System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
+//                    "Total number of additions = " + ve2.getAddActions() +"\n" +
+//                    "Total number of multiplications = " + ve2.getMultiplyActions()+"\n");
+//        }
 
 
         //extract output text file
