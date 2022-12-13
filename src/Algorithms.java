@@ -1,6 +1,5 @@
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 public class Algorithms {
 
@@ -26,121 +25,110 @@ public class Algorithms {
         }
         this.hidden = new ArrayList<>();
         this.evidence = new ArrayList<>();
+        this.answer = 0;
     }
 
     public double runAlgo(int algo){
+        String q = this.query;
         double ans = 0;
-        if (algo == 1){
-            ans = jointProb(this.query);
+        if (getProbFromCPT() > 0) {
+            ans = getProbFromCPT();
+            ans = formatAnswer(ans);
+            return ans;
         }
-        if (algo == 2){
-            ans = eliminateBySize(this.query);
-        }
+        else {
+            HashMap<String, String> evidenceVars = new HashMap<>();
 
+            //Save evidence variables outcomes
+            String numeratorStr = q.replace("|", ",");       //P(B=T,J=T,M=T)
+            numeratorStr = numeratorStr.substring(2, numeratorStr.length()-1); //B=T,J=T,M=T
+            String[] numerator = numeratorStr.split(",");                //[B=T,J=T,M=T]
+
+            for (int i = 0; i<numerator.length; i++){
+                String[] varName_outcome = numerator[i].split("=");       //e.g. [B,T]
+                evidenceVars.put(varName_outcome[0], varName_outcome[1]);
+            }
+
+            //Hidden variables outcomes (permutations, save)
+            int numOfPerm = 1;
+            for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations on the hidden variables
+                numOfPerm *= this.hidden.get(i).getOutcomes().size();
+            }
+
+
+
+
+            if (algo == 1){
+                ans = jointProb(q);
+            }
+            if (algo == 2){
+                ans = eliminateBySize(q);
+            }
 //        else if (algo == 3){
-//            heuristicElimination(query);
+//            ans = heuristicElimination(q);
 //        }
+        }
         return ans;
     }
 
-    public double jointProb(String q){
-        double ans = 0;
-
-        if (q.equals(null)){
-            System.out.println("Null query");
-            return -1;
-        }
-
-        else {
-//            String queryVar = q.substring(2, 5);
-            String queryVarName = q.substring(2, 3);
-            String queryVarOutcome = q.substring(3, 4);
-            int queryVarIndex = network.find(queryVarName);
-            CptNode queryVarNode = network.get(queryVarIndex);
-
-            if (q.length() > 5) { //e.g. P(A=F|J=T,M=T)=?
-                String givenVars = q.substring(6, q.length() - 1);
-                String[] givensArr = givenVars.split(",");
-                ArrayList<String> givens = new ArrayList<>();
-                ArrayList<String> outcomes = new ArrayList<>();
-
-                String name = "";
-                String outcome = "";
-
-                for (int i = 0; i < givensArr.length; i++) {
-                    name = givensArr[i].substring(0, 1);
-                    givens.add(name);
-                    outcome = givensArr[i].substring(2, 3);
-                    givens.add(name);
+    public double jointProb(String q){ //P(B=T|J=T,M=T)
+        double ans=0;
 
 
-                }
+        String newQ = "";
 
-                if (queryVarNode.getParents().size() == givens.size()) { //then we might get the probability from the CPT
-                    boolean flag = true;
-                    for (int i = 0; i < givens.size(); i++) {
-                        if (!queryVarNode.getParents().contains(givens.get(i))) {
-                            flag = false;
-                        }
-                    }
+        if (q.length()>6){
+            String numeratorString = q.replace("|", ",");
+            String denominator = q.substring(6, q.length()-1);
+            newQ = "P(";
 
-                    if (flag) { // we can get the probability from the CPT
-                        int index = 0;
-                        int outcomeIndex = 0;
-
-                        for (int o = 0; o < queryVarNode.getOutcomes().size(); o++) {
-                            if (queryVarNode.getOutcomes().get(o).equals(queryVarOutcome)) {
-                                outcomeIndex = o;
-                            }
-                        }
-                        index += outcomeIndex;
-
-                        for (int p = queryVarNode.getParentNodes().size() - 1; p >= 0; p--) {
-                            CptNode parent = queryVarNode.getParentNodes().get(p);
-                            for (int o = 0; o < parent.getOutcomes().size(); o++) {
-                                if (parent.getOutcomes().get(o).equals(queryVarOutcome)) {
-                                    outcomeIndex = o;
-                                }
-                            }
-
-                        }
-
-
-                        ans = Double.parseDouble(queryVarNode.getProbTable().get(index));
-                        ans = formatAnswer(ans);
-                        return ans;
-                    } else { // we need to calculate the probability
-
-                        String newq = "";
-                        for (int i = 0; i < variables.size(); i++) {
-                            //newq;
-                            calcProb(newq);
-                            multiAct++;
-
-                        }
-                    }
-
-
-                }
-            } else {  //e.g. P(B=T)=?. We can get that from the CPT
-                for (int r = 0; r < queryVarNode.getOutcomes().size(); r++) {
-                    String outcome = queryVarNode.getOutcomes().get(r);
-                    if (queryVarOutcome.equals(outcome)) {
-                        ans = Double.parseDouble(queryVarNode.getProbTable().get(r));
-                        ans = formatAnswer(ans);
-                        return ans;
-                    } else {
-                        System.out.println("error");
-                    }
-                }
+            int numOfPerm = 1;
+            for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations on the hidden variables
+                numOfPerm *= this.hidden.get(i).getOutcomes().size();
             }
+
+            double multi = 1;
+            double sum = 0;
+            for (CptNode evidenceVar: this.evidence)
+                newQ += evidenceVar.getName() + "=" ;
+
+            for (int i = 0; i<numOfPerm; i++){
+                multi *= calcProb(newQ);
+                this.multiAct++;
+            }
+            sum += multi;
+            this.addAct++;
+
+
+            calcProb(q);
         }
+        else {
+            ans = getProbFromCPT();
+            ans = formatAnswer(ans);
+            this.answer = ans;
+        }
+
         return ans;
     }
 
     public double eliminateBySize(String q){
         double ans = 0;
 
+        return ans;
+    }
+
+    public double calcProb(String q){
+        double ans =0;
+        String numerator = q.replace("|", ",");
+        String denominator = q.substring(6, q.length());
+        String newQ = "P(";
+//        if (){
+//
+//        }
+//        if related -> evidence, else -> hidden
+
+        ans = formatAnswer(ans);
+        this.answer = ans;
         return ans;
     }
 
@@ -166,22 +154,12 @@ public class Algorithms {
         return this.multiAct;
     }
 
-    public double calcProb(String q){
-        double ans =0;
-//        String
-//        if (this.query.contains())
-//        hasParents
-//        if related -> evidence, else -> hidden
-
-        return ans;
-    }
-
     public void addToEvidence(String query){
         for (int i = 0; i<variables.size(); i++){
             CptNode currVar = variables.get(i);
             String currVarName = currVar.getName();
-            if (query.contains(currVarName)){
-                evidence.add(currVar);
+            if (query.contains(currVarName) && !this.evidence.contains(currVarName)){
+                this.evidence.add(currVar);
             }
         }
     }
@@ -190,8 +168,8 @@ public class Algorithms {
         for (int i = 0; i<this.variables.size(); i++){
             CptNode currVar = this.variables.get(i);
             String currVarName = currVar.getName();
-            if (!query.contains(currVarName)){
-                hidden.add(currVar);
+            if ( !query.contains(currVarName) && !this.hidden.contains(currVarName)){
+                    this.hidden.add(currVar);
             }
         }
     }
@@ -221,34 +199,100 @@ public class Algorithms {
 
     }
 
-    public double getProbFromCPT(){
+    public double getProbFromCPT() {
+        double ans = 0;
+        String queryVar = this.query.substring(2, 5);
+        String queryVarName = this.query.substring(2, 3);
+        String queryVarOutcome = this.query.substring(3, 4);
+        int queryVarIndex = network.find(queryVarName);
+        CptNode queryVarNode = network.get(queryVarIndex);
 
+        if (this.query.length() > 5) { //e.g. P(A=F|E=T,B=T)=?
+            String givenVars = this.query.substring(6, this.query.length() - 1);
+            String[] givensArr = givenVars.split(",");
+            ArrayList<String> givens = new ArrayList<>();
+            ArrayList<String> outcomes = new ArrayList<>();
 
+            String name = "";
+            String outcome = "";
 
+            for (int i = 0; i < givensArr.length; i++) {
+                name = givensArr[i].substring(0, 1);
+                givens.add(name);
+                outcome = givensArr[i].substring(2, 3);
+                outcomes.add(outcome);
+            }
 
+            if (queryVarNode.getParents().size() == givens.size()) { //then we might get the probability from the CPT
+                boolean flag = true;
+                for (int i = 0; i < givens.size(); i++) {
+                    if (!queryVarNode.getParents().contains(givens.get(i))) {
+                        flag = false;
+                    }
+                }
 
-        double prob;
-        int index = this.network.find(String.valueOf(query.charAt(2)));
-        CptNode var = this.variables.get(index);
-        var.getProbTable();
+                if (flag) { // we can get the probability from the CPT
+                    int index = 0;
+                    int outcomeIndex = 0;
 
-//        HashMap<String, >;
-        ArrayList<String> varParents;
-        if (var.hasParents()){
-            varParents = var.getParents();
-            for (int i = 0; i<varParents.size(); i++){
-                ArrayList<Integer> outcomesNums = new ArrayList<>();
-                String parent = varParents.get(i);
-                CptNode parentNode = network.get(network.find(parent));
-                int numOfOutcomes = parentNode.getOutcomes().size();
-                outcomesNums.add(numOfOutcomes);
+                    for (int o = 0; o < queryVarNode.getOutcomes().size(); o++) {
+                        if (queryVarNode.getOutcomes().get(o).equals(queryVarOutcome)) {
+                            outcomeIndex = o;
+                        }
+                    }
+                    index += outcomeIndex;
+
+                    int multiply = queryVarNode.getOutcomes().size();
+                    for (int p = queryVarNode.getParentNodes().size() - 1; p >= 0; p--) {
+                        CptNode parent = queryVarNode.getParentNodes().get(p);
+                        for (int o = 0; o < parent.getOutcomes().size(); o++) {
+                            if (parent.getOutcomes().get(o).equals(queryVarOutcome)) {
+                                outcomeIndex = o;
+                            }
+                        }
+                        index += outcomeIndex * multiply;
+                        multiply *= parent.getOutcomes().size();
+                    }
+
+                    ans = Double.parseDouble(queryVarNode.getProbTable().get(index));
+                    ans = formatAnswer(ans);
+                    return ans;
+                }
+
+            }
+
+        }
+        else {  //e.g. P(B=T)=?. We can get that from the CPT
+            for (int r = 0; r < queryVarNode.getOutcomes().size(); r++) {
+                String outcome = queryVarNode.getOutcomes().get(r);
+                if (queryVarOutcome.equals(outcome)) {
+                    ans = Double.parseDouble(queryVarNode.getProbTable().get(r));
+                    ans = formatAnswer(ans);
+                    return ans;
+                } else {
+                    System.out.println("error");
+                }
             }
 
         }
 
-        prob = Double.parseDouble(var.getProbTable().get(0));
-        return prob;
+        return ans;
     }
 
+    public String printHidden() {
+        String print = "";
+        for (int i = 0; i<this.hidden.size(); i++){
+            print += this.hidden.get(i).getName() + ", ";
+        }
+        return print;
+    }
+
+    public String printEvidence() {
+        String print = "";
+        for (int i = 0; i<this.evidence.size(); i++){
+            print += this.evidence.get(i).getName() + ", ";
+        }
+        return print;
+    }
 }
 

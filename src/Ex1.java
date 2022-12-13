@@ -8,7 +8,25 @@ import java.util.Scanner;
 public class Ex1 {
     public static void main(String[] args) throws IOException {
 
-        answerQueries("input.txt");
+        String q = "P(B=T|J=T,M=T)";
+//        String numerator = q.replace("|", ",");
+        String denominator = "P(" +q.substring(6, q.length());
+//        System.out.println(numerator);
+//        System.out.println(denominator);
+
+        String query = "P(B=T)";
+
+        String numeratorStr = q.replace("|", ",");  //P(B=T,J=T,M=T)
+        System.out.println(numeratorStr);
+        numeratorStr = numeratorStr.substring(2, numeratorStr.length()-1);
+        System.out.println(numeratorStr);
+        String[] numerator = numeratorStr.split(",");
+        for (int i = 0; i< numerator.length; i++){
+            System.out.println(numerator[i]);
+        }
+
+
+//        answerQueries("input.txt");
 
     }
 
@@ -55,7 +73,6 @@ public class Ex1 {
                 int algoWanted = Integer.parseInt(query.substring(query.length()-1));
                 String newQuery = query.substring(0,query.length()-1);
                 if (algoWanted == 1){
-                    output = "";
                     Algorithms jd = new Algorithms(newQuery, network);
                     jd.addToHidden(newQuery);
                     jd.addToEvidence(newQuery);
@@ -64,10 +81,11 @@ public class Ex1 {
                     output += jd.runAlgo(1) + "," + jd.getAddActions() + "," + jd.getMultiplyActions() + "\n";
                     System.out.println(query + ":" + "\n" + "Answer = " + jd.runAlgo(1) + "\n" +
                             "Total number of additions = " + jd.getAddActions() + "\n" +
-                            "Total number of multiplications = " + jd.getMultiplyActions() +"\n");
+                            "Total number of multiplications = " + jd.getMultiplyActions() +"\n" +
+                            "hidden: " + jd.printHidden() +"\n" +
+                            "evidence: " + jd.printEvidence() +"\n");
                 }
                 else if (algoWanted == 2){
-                    output = "";
                     Algorithms ve1 = new Algorithms(newQuery, network);
                     ve1.addToHidden(newQuery);
                     ve1.addToEvidence(newQuery);
