@@ -37,9 +37,10 @@ public class Algorithms {
             return ans;
         }
         else {
-            HashMap<String, String> evidenceVars = new HashMap<>();
+            HashMap<String, String> allVars = new HashMap<>();
 
             //Save evidence variables outcomes
+            HashMap<String, String> evidenceVars = new HashMap<>();
             String numeratorStr = q.replace("|", ",");       //P(B=T,J=T,M=T)
             numeratorStr = numeratorStr.substring(2, numeratorStr.length()-1); //B=T,J=T,M=T
             String[] numerator = numeratorStr.split(",");                //[B=T,J=T,M=T]
@@ -47,13 +48,20 @@ public class Algorithms {
             for (int i = 0; i<numerator.length; i++){
                 String[] varName_outcome = numerator[i].split("=");       //e.g. [B,T]
                 evidenceVars.put(varName_outcome[0], varName_outcome[1]);
+                allVars.put(varName_outcome[0], varName_outcome[1]);
             }
 
             //Hidden variables outcomes (permutations, save)
-            int numOfPerm = 1;
+            HashMap<String, String> hiddenVars = new HashMap<>();
+            int numOfPerms = 1;
             for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations on the hidden variables
-                numOfPerm *= this.hidden.get(i).getOutcomes().size();
+                numOfPerms *= this.hidden.get(i).getOutcomes().size();
             }
+            for (int i = 0; i<numOfPerms; i++){
+
+            }
+
+
 
 
 

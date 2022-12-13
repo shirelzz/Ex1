@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Ex1 {
@@ -24,6 +25,17 @@ public class Ex1 {
         for (int i = 0; i< numerator.length; i++){
             System.out.println(numerator[i]);
         }
+        HashMap<String, String> evidenceVars = new HashMap<>();
+
+        for (int i = 0; i<numerator.length; i++){
+            String[] varName_outcome = numerator[i].split("=");
+            System.out.println(varName_outcome[0]);//e.g. [B,T]
+            System.out.println(varName_outcome[1]);//e.g. [B,T]
+
+            evidenceVars.put(varName_outcome[0], varName_outcome[1]);
+        }
+        System.out.println(evidenceVars);
+        System.out.println(evidenceVars.get("J"));
 
 
 //        answerQueries("input.txt");
