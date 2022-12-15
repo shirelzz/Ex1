@@ -57,17 +57,18 @@ public class Algorithms {
                 this.answer = ans;
                 return ans;
             } else {
-                //Hidden variables outcomes (saves them in a hashmap. Later we will get their permutation for the joint distribution algorithm)
+                /*Hidden variables outcomes.
+                This part saves them in a hashmap.
+                Later we will get their permutation for the joint distribution algorithm.
+                 */
                 HashMap<String, String> hiddenVars = new HashMap<>();
                 for (int j = 0; j < this.hidden.size(); j++) {
                     CptNode currHidden = this.hidden.get(j);
                     hiddenVars.put(currHidden.getName(), currHidden.getOutcomes().get(0));
                 }
-//            dropFromHidden(); //remove variable if it is an ancestor of one evidence variables
-
 
                 if (algo == 1) {
-                    ans = jointProb(queryVar,queryRequestedOutcome, q, evidenceVars);
+                    ans = jointProb(queryVar, queryRequestedOutcome, evidenceVars);
                     ans = formatAnswer(ans);
                     this.answer = ans;
                     return ans;
@@ -90,8 +91,11 @@ public class Algorithms {
 
             int index = network.find(name);
             CptNode queryVar = network.get(index);
-
-            ans = getProbFromCPT(queryVar, outcome, query);
+            if (!queryVar.hasParents()) {
+                ans = getProbFromCPT(queryVar, outcome, query);
+            } else {
+                ans = jointProb(queryVar, outcome, query);
+            }
             ans = formatAnswer(ans);
             this.answer = ans;
             return ans;
@@ -104,7 +108,7 @@ public class Algorithms {
         return ans;
     }
 
-    public double jointProb(CptNode queryVar, String queryRequestedOutcome, String q, HashMap evidenceVars) { //e.g. q = "P(B=T|J=T,M=T)"
+    public double jointProb(CptNode queryVar, String queryRequestedOutcome, HashMap evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans = 0;
 
         //get number of permutations for the hidden variables
@@ -114,7 +118,7 @@ public class Algorithms {
         }
 
         String newQ = "";
-        if (q.contains("|")) {  //then we need to calculate. Else we surely can get the answer from the CPT
+//        if (q.contains("|")) {  //then we need to calculate. Else we surely(yael?) can get the answer from the CPT
 
             /* To answer a query like P(B=T|J=T,M=T) we need to calculate:
             P(B=T|J=T,M=T) = P(B=T,J=T,M=T)/P(J=T,M=T)
@@ -134,33 +138,34 @@ public class Algorithms {
 //                    denominatorQ += ",";
 //                }
 //            }
-            double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
-            double denominatorAns = 0;
+        double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
+        double denominatorAns = 0;
 
 
             /*
             For the denominator we will sum all possible outcomes of the query variable
              */
-            for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
-                HashMap<String, String> queryVarOutcome = new HashMap<>();
-                queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
-                queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
-                denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
-            }
-//            evidenceVars.get(queryVarName).
-            ans = numeratorAns / denominatorAns;
-            ans = formatAnswer(ans);
-            return ans;
-
-        } else {
-            HashMap<String,String> evidence = new HashMap<>();
-            evidence.put(queryVar.getName(), queryRequestedOutcome);
-            ans = getProbFromCPT(queryVar, queryRequestedOutcome, evidenceVars);
-            ans = formatAnswer(ans);
-            this.answer = ans;
+        int counter = 0;
+        for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
+            HashMap<String, String> queryVarOutcome = new HashMap<>();
+            queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
+            queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
+            denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
+            counter++;
         }
-
+//            evidenceVars.get(queryVarName).
+        ans = numeratorAns;
+        double alpha = normalize(denominatorAns);
+        ans = alpha * ans;
+        ans = formatAnswer(ans);
         return ans;
+//        } else {
+//            HashMap<String,String> evidence = new HashMap<>();
+//            evidence.put(queryVar.getName(), queryRequestedOutcome);
+//            ans = getProbFromCPT(queryVar, queryRequestedOutcome, evidenceVars);
+//            ans = formatAnswer(ans);
+//            this.answer = ans;
+//        }
     }
 
     public double normalize(double res) { //see later how to normalize
@@ -247,9 +252,6 @@ public class Algorithms {
             ans += calcEachPerm(currQuery, queryVar);
             this.addAct1++;
         }
-
-        ans = formatAnswer(ans);
-        this.answer = ans;
         return ans;
     }
 
@@ -380,47 +382,51 @@ public class Algorithms {
                 String[] probTable = queryVar.getProbTable().get(0).split(" ");
                 ans = Double.parseDouble(probTable[index]);
                 ans = formatAnswer(ans);
-
-            } else if (evidenceVars.size() - 1 < queryParents.size()) {       //e.g. P(A=T|E=F)=? or P(B=T)=?
-                ArrayList<CptNode> hiddenParents = queryVar.getParentNodes();
-                for (int j = 0; j < queryParents.size(); j++) {
-                    CptNode parent = queryParents.get(j);
-                    String parentName = parent.getName();
-                    if (!evidenceVars.containsKey(parentName)) {
-                        hiddenParents.add(parent);
-                    }
-                }
-
             }
 
-            int index = 0;
-            int outcomeIndex = 0;
-
-            for (int o = 0; o < queryVar.getOutcomes().size(); o++) {
-                if (queryVar.getOutcomes().get(o).equals(queryRequestedOutcome)) {
-                    outcomeIndex = o;
-                }
-            }
-            index += outcomeIndex;
-
-            int multiply = queryVar.getOutcomes().size();
-            for (int p = queryParents.size() - 1; p >= 0; p--) {
-                CptNode parent = queryParents.get(p);
-                outcome = evidenceVars.get(parent.getName());
-                for (int o = 0; o < parent.getOutcomes().size(); o++) {
-                    if (parent.getOutcomes().get(o).equals(outcome)) {
-                        outcomeIndex = o;
-                        break;
-                    }
-                }
-                index += outcomeIndex * multiply;
-                multiply *= parent.getOutcomes().size();
-            }
-
-            String[] probTable = queryVar.getProbTable().get(0).split(" ");
-            ans = Double.parseDouble(probTable[index]);
-            ans = formatAnswer(ans);
-            return ans;
+//            } else if (evidenceVars.size() - 1 < queryParents.size()) {       //e.g. P(A=T|E=F)=? or P(B=T)=?
+//                ArrayList<CptNode> hiddenParents = queryVar.getParentNodes();
+//                for (int j = 0; j < queryParents.size(); j++) {
+//                    CptNode parent = queryParents.get(j);
+//                    String parentName = parent.getName();
+//                    if (!evidenceVars.containsKey(parentName)) {
+//                        hiddenParents.add(parent);
+//                    }
+//                }
+//
+//                int index = 0;
+//                int outcomeIndex = 0;
+//
+//                for (int o = 0; o < queryVar.getOutcomes().size(); o++) {
+//                    if (queryVar.getOutcomes().get(o).equals(queryRequestedOutcome)) {
+//                        outcomeIndex = o;
+//                    }
+//                }
+//                index += outcomeIndex;
+//
+//                int multiply = queryVar.getOutcomes().size();
+//                for (int p = queryParents.size() - 1; p >= 0; p--) {
+//                    CptNode parent = queryParents.get(p);
+//                    if (!hiddenParents.contains(parent)){
+//                        outcome = evidenceVars.get(parent.getName());
+//                        for (int o = 0; o < parent.getOutcomes().size(); o++) {
+//                            if (parent.getOutcomes().get(o).equals(outcome)) {
+//                                outcomeIndex = o;
+//                                break;
+//                            }
+//                        }
+//                        index += outcomeIndex * multiply;
+//                        multiply *= parent.getOutcomes().size();
+//                    }
+//
+//
+//                }
+//
+//                String[] probTable = queryVar.getProbTable().get(0).split(" ");
+//                ans = Double.parseDouble(probTable[index]);
+//                ans = formatAnswer(ans);
+//                return ans;
+//            }
 
 
         } else {  //queryVar does not have any parents
@@ -437,6 +443,7 @@ public class Algorithms {
             ans = formatAnswer(ans);
             return ans;
         }
+        return ans;
     }
 
     public void dropFromHidden() {
