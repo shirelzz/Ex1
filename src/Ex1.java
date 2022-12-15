@@ -9,10 +9,10 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) throws IOException, SAXException {
 
-        BayesianNetwork network = new BayesianNetwork();
-        XmlReader xmlReader = new XmlReader();
-        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
-        network.printNet();
+//        BayesianNetwork network = new BayesianNetwork();
+//        XmlReader xmlReader = new XmlReader();
+//        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
+//        network.printNet();
 
         String q = "P(B=T|J=T,M=T)";
 //        String numerator = q.replace("|", ",");
@@ -53,6 +53,8 @@ public class Ex1 {
         E.setName("E");
         E.addOutcome("T");
         E.addOutcome("F");
+        E.addOutcome("K");
+
         hidden.add(E);
 
         CptNode P = new CptNode();
@@ -65,7 +67,15 @@ public class Ex1 {
         A.setName("A");
         A.addOutcome("T");
         A.addOutcome("F");
+        A.addOutcome("K");
         hidden.add(A);
+
+//        CptNode T = new CptNode();
+//        T.setName("A");
+//        T.addOutcome("T");
+//        T.addOutcome("F");
+////        T.addOutcome("K");
+//        hidden.add(T);
 
 
         HashMap<String, String> hiddenVars = new HashMap<>();
@@ -74,45 +84,69 @@ public class Ex1 {
 
         ArrayList<HashMap<String,String>> permutions = new ArrayList<>();
 
-        int numOfPerms = 8;
-        int arr[] = new int[hidden.size()];
-        for (int k = 0; k<numOfPerms; k++){
-            HashMap<String, String> perm = new HashMap<>();
-            for (int i=0; i<hidden.size(); i++){
-                CptNode currHidden = hidden.get(i);
-                String name = currHidden.getName();
-                if (arr[i]<currHidden.getOutcomes().size()){
-                    String outcome = currHidden.getOutcomes().get(arr[i]);
-                    perm.put(name,outcome);
+        int numOfPerms = 18;
+        int outcomesSizes[] = new int[hidden.size()];
 
-                    if (i==0){
-                        arr[0]++;
-                        if (arr[0] + 1 == hidden.get(0).getOutcomes().size()){
-                            arr[0] = 0;
-                        }
-                    }
-                    else if (i>0){
-                        if (arr[i-1] +1  == hidden.get(i-1).getOutcomes().size()){
-                            arr[i-1] = 0;
-                        }
-                        if (arr[i-1] +1 == hidden.get(i-1).getOutcomes().size()){
-                            arr[i-1] = 0;
-                        }
-
-                        if (arr[i]+1<currHidden.getOutcomes().size()) {
-                            arr[i]++;
-                        }
-                        else {
-                            arr[i] = 0;
-                        }
-                    }
-                }
-            }
-            System.out.println(perm);
-            permutions.add(perm);
+        for (int i = 0; i<hidden.size(); i++){
+            CptNode curr = hidden.get(i);
+            outcomesSizes[i] = curr.getOutcomes().size();
         }
 
+        int m =outcomesSizes[0];
+        int temp = outcomesSizes[1];
+        outcomesSizes[1] = m;
+        m=temp;
+        outcomesSizes[0]=0;
+
+        for (int i = 2; i<outcomesSizes.length; i++){
+            m *= outcomesSizes[i];
+            outcomesSizes[i] = m;
+        }
+        System.out.println(Arrays.toString(outcomesSizes));
+
+        String name = "";
+        String outcome = "";
+
+        int outcomes[] = new int[hidden.size()];
+        for (int i = 0; i<numOfPerms; i++){
+            HashMap<String, String> perm = new HashMap<>();
+            for (int j = 0; j<hidden.size(); j++){
+                CptNode currHidden = hidden.get(j);
+                name = currHidden.getName();
+                int numOfOutcomes = currHidden.getOutcomes().size();
+                if (outcomes[j]>=numOfOutcomes){
+                    outcomes[j] = 0;
+                }
+                outcome = currHidden.getOutcomes().get(outcomes[j]);
+                if (j==0){
+                    outcomes[j]++;
+                }
+                else {
+                    if ((i % outcomesSizes[j] == 0) && (i != 0)){
+                        if (outcomes[j]+1 >= numOfOutcomes){
+                            outcomes[j] = 0;
+                        }
+                        else {
+                            outcomes[j]++;
+                        }
+                        outcome = currHidden.getOutcomes().get(outcomes[j]);
+                    }
+                }
+                perm.put(name,outcome);
+                if (!permutions.contains(perm)){
+                    permutions.add(perm);
+                }
+            }
+
+        }
+
+        System.out.println();
+
+        for (int i = 0; i<permutions.size(); i++){
+            System.out.println(permutions.get(i));
+        }
     }
+
 
 
 

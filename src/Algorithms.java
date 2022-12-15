@@ -78,6 +78,7 @@ public class Algorithms {
             CptNode currHidden = this.hidden.get(j);
             hiddenVars.put(currHidden.getName(), currHidden.getOutcomes().get(0));
         }
+        dropFromHidden();
 
         int numOfPerms = 1;
         for (int i = 0; i< this.hidden.size(); i++ ){   //get number of permutations for the hidden variables
@@ -133,43 +134,59 @@ public class Algorithms {
 
     public ArrayList<HashMap<String, String>> getPerms(HashMap hidden, HashMap evidence, int numOfPerms){
         ArrayList<HashMap<String,String>> permutations = new ArrayList<>();
-        int k = 0;
-        while (k<numOfPerms){
-            HashMap<String,String> curr = new HashMap<>();
-            for (int i = 0; i<evidence.size(); i++){  //copy evidence variables
-                CptNode currEvi = this.evidence.get(i);
-                String currName = currEvi.getName();
-                String currOut = currEvi.getOutcomes().get(0);
-                curr.put(currName, currOut);
-            }
 
+        int outcomesSizes[] = new int[hidden.size()];
 
-            for (int i = 1; i<numOfPerms; i++){ //create permutation
-                HashMap<String,String> perm = new HashMap<>();
-                Iterator<String> iterator = hidden.keySet().iterator();
-                while (iterator.hasNext()){
-                    String key = iterator.next();
+        for (int i = 0; i<this.hidden.size(); i++){
+            CptNode curr = this.hidden.get(i);
+            outcomesSizes[i] = curr.getOutcomes().size();
+        }
 
+        int m =outcomesSizes[0];
+        int temp = outcomesSizes[1];
+        outcomesSizes[1] = m;
+        m=temp;
+        outcomesSizes[0]=0;
+
+        for (int i = 2; i<outcomesSizes.length; i++){
+            m *= outcomesSizes[i];
+            outcomesSizes[i] = m;
+        }
+
+        String name = "";
+        String outcome = "";
+
+        int outcomes[] = new int[hidden.size()];
+        for (int i = 0; i<numOfPerms; i++){
+            HashMap<String, String> perm = new HashMap<>();
+            for (int j = 0; j<hidden.size(); j++){
+                CptNode currHidden = this.hidden.get(j);
+                name = currHidden.getName();
+                int numOfOutcomes = currHidden.getOutcomes().size();
+                if (outcomes[j]>=numOfOutcomes){
+                    outcomes[j] = 0;
                 }
-
-                curr.putAll(perm);
-                permutations.add(curr);
-
-
-
+                outcome = currHidden.getOutcomes().get(outcomes[j]);
+                if (j==0){
+                    outcomes[j]++;
+                }
+                else {
+                    if ((i % outcomesSizes[j] == 0) && (i != 0)){
+                        if (outcomes[j]+1 >= numOfOutcomes){
+                            outcomes[j] = 0;
+                        }
+                        else {
+                            outcomes[j]++;
+                        }
+                        outcome = currHidden.getOutcomes().get(outcomes[j]);
+                    }
+                }
+                perm.put(name,outcome);
+                if (!permutations.contains(perm)){
+                    permutations.add(perm);
+                }
             }
-            k++;
         }
-
-
-        for (int i = 0; i<this.hidden.size(); i++){  //get number of outcomes for each hidden variable
-            this.hidden.get(i);
-        }
-
-        HashMap<String,String> permutation = new HashMap<>();
-
-        permutations.add(permutation);
-
         return permutations;
     }
 
@@ -337,6 +354,18 @@ public class Algorithms {
         }
 
         return ans;
+    }
+
+    public void dropFromHidden(){
+        for (int i = 0; i<this.hidden.size(); i++){
+            CptNode var = this.hidden.get(i);
+            for (int j = 0; j<this.evidence.size(); j++){
+                CptNode evi = this.evidence.get(j);
+                if (evi.getAncestors().contains(var.getName())){
+                    this.hidden.remove(var);
+                }
+            }
+        }
     }
 
     public String printHidden() {

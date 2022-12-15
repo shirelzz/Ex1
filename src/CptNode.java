@@ -58,20 +58,20 @@ public class CptNode {
 
     public void addAncestors(ArrayList<CptNode> variables){
 
-        for (int i = 0; i<variables.size(); i++){
+        for (int i = 0; i<variables.size(); i++) {
             CptNode var = variables.get(i);
             ArrayList<CptNode> varParents = var.getParentNodes();
-            if (varParents.size() > 0){
-                for (int j = 0; j<varParents.size(); j++){ //add parents (copy)
+            if (varParents.size() > 0) {
+                for (int j = 0; j < varParents.size(); j++) { //add parents (copy)
                     if (!var.getAncestors().contains(varParents.get(j))) {
                         var.addAncestor(varParents.get(j));
                     }
                 }
-                for (int j = 0; j<varParents.size(); j++){ //add each parent's parents
+                for (int j = 0; j < varParents.size(); j++) { //add each parent's parents
                     CptNode gParent = varParents.get(j);
-                    if (gParent.hasParents()){
+                    if (gParent.hasParents()) {
                         ArrayList<CptNode> varGParents = gParent.getParentNodes();
-                        for (int k = 0; k<varGParents.size(); k++){
+                        for (int k = 0; k < varGParents.size(); k++) {
                             if (!var.getAncestors().contains(varGParents.get(k))) {
                                 var.addAncestor(varGParents.get(k));
                             }
@@ -80,34 +80,7 @@ public class CptNode {
                     }
                 }
             }
-//            ArrayList<CptNode> varAnc = var.getAncestors();
-//            for (int r = 0; r<varAnc.size();){
-//                CptNode anc = varAnc.get(r);
-//                if (anc.hasParents()){
-//                    ArrayList<CptNode> ancParents = anc.getParentNodes();
-//                    for (int g = 0; g< ancParents.size(); g++){
-//                        if (!var.getAncestors().contains(ancParents.get(g))) {
-//                            var.addAncestor(ancParents.get(g));
-//                        }
-//                    }
-//
-//                }
-//            }
         }
-
-
-//        for (int i = 0; i<variables.size(); i++){
-//            CptNode var = variables.get(i);
-//            if (var.getParentNodes().size() == 0){
-//                return;
-//            }
-//            else {
-//                for (int j = 0; j<var.getParentNodes().size(); j++) {
-//                    var.addAncestor(var.getParentNodes().get(j));
-//                }
-//                addAncestors(var.getParentNodes());
-//            }
-//        }
     }
 
     public void addAncestor(CptNode ancestor) { ancestors.add(ancestor);}

@@ -133,6 +133,24 @@ public class XmlReader {
                     cptNode.addAncestors(variables);
                 }
 
+//                for (int i = 0; i<variables.size(); i++) { //trying to add more ancestors. program does not stop.
+//                    CptNode var = variables.get(i);
+//                    ArrayList<CptNode> varAnc = var.getAncestors();
+//
+//                    for (int r = 0; r < varAnc.size(); ) {
+//                        CptNode anc = varAnc.get(r);
+//                        if (anc.hasParents()) {
+//                            ArrayList<CptNode> ancParents = anc.getParentNodes();
+//                            for (int g = 0; g < ancParents.size(); g++) {
+//                                if (!var.getAncestors().contains(ancParents.get(g))) {
+//                                    var.addAncestor(ancParents.get(g));
+//                                }
+//                            }
+//
+//                        }
+//                    }
+//                }
+
 
 
 
