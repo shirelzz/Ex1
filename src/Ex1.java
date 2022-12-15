@@ -14,13 +14,25 @@ public class Ex1 {
 //        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
 //        network.printNet();
 
-        String q = "P(B=T|J=T,M=T)";
+//        String q = "P(B=T|J=T,M=T)";
+//        String[] qv = q.split("|");
+//        System.out.println(Arrays.toString(qv));
 //        String numerator = q.replace("|", ",");
-        String denominator = "P(" +q.substring(6, q.length());
+//        System.out.println(numerator);
+//        String numeratorStr = numerator.substring(2,q.length()-1);
+//        System.out.println(numeratorStr);
+//        String[] ns = numeratorStr.split(",");
+//        System.out.println(Arrays.toString(ns));
+//        String[] ns0 = ns[0].split("=");
+//        System.out.println(Arrays.toString(ns0));
+
+
+        //        gueryVar = ns[0];
+//        String denominator = "P(" +q.substring(6, q.length());
 //        System.out.println(numerator);
 //        System.out.println(denominator);
 
-        String query = "P(B=T)";
+//        String query = "P(B=T)";
 
 
 
@@ -145,6 +157,10 @@ public class Ex1 {
         for (int i = 0; i<permutions.size(); i++){
             System.out.println(permutions.get(i));
         }
+
+
+                answerQueries("input.txt");
+
     }
 
 
@@ -175,15 +191,6 @@ public class Ex1 {
 //            System.out.println(entry.getValue());
 //        }
 
-
-
-
-
-
-
-
-
-//        answerQueries("input.txt");
 
     public static void answerQueries(String inputFileName){
 
@@ -233,10 +240,10 @@ public class Ex1 {
                     jd.addToEvidence(newQuery);
                     jd.runAlgo(1);
 
-                    output += jd.runAlgo(1) + "," + jd.getAddActions() + "," + jd.getMultiplyActions() + "\n";
+                    output += jd.runAlgo(1) + "," + jd.getAddActions1() + "," + jd.getMultiplyActions1() + "\n";
                     System.out.println(query + ":" + "\n" + "Answer = " + jd.runAlgo(1) + "\n" +
-                            "Total number of additions = " + jd.getAddActions() + "\n" +
-                            "Total number of multiplications = " + jd.getMultiplyActions() +"\n" +
+                            "Total number of additions = " + jd.getAddActions1() + "\n" +
+                            "Total number of multiplications = " + jd.getMultiplyActions1() +"\n" +
                             "hidden: " + jd.printHidden() +"\n" +
                             "evidence: " + jd.printEvidence() +"\n");
                 }
@@ -246,10 +253,10 @@ public class Ex1 {
                     ve1.addToEvidence(newQuery);
                     ve1.runAlgo(2);
 
-                    output += (ve1.getAnswer() + "," + ve1.getAddActions() + "," + ve1.getMultiplyActions()) + "\n";
+                    output += (ve1.getAnswer() + "," + ve1.getAddActions2() + "," + ve1.getMultiplyActions2()) + "\n";
                     System.out.println(query + ":" + "\n" + "Answer = " + ve1.getAnswer() + "\n" +
-                            "Total number of additions = " + ve1.getAddActions() + "\n" +
-                            "Total number of multiplications = " + ve1.getMultiplyActions() +"\n");
+                            "Total number of additions = " + ve1.getAddActions2() + "\n" +
+                            "Total number of multiplications = " + ve1.getMultiplyActions2() +"\n");
                 }
             }
 

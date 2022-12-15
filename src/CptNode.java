@@ -56,6 +56,18 @@ public class CptNode {
         return this.parentNodes;
     }
 
+    public CptNode findParent(String name){
+        int index = 0;
+        for (int i = 0; i<this.parentNodes.size(); i++){
+            CptNode p = this.parentNodes.get(i);
+            if (p.getName().equals(name)){
+                index = i;
+                break;
+            }
+        }
+        return this.parentNodes.get(index);
+    }
+
     public void addAncestors(ArrayList<CptNode> variables){
 
         for (int i = 0; i<variables.size(); i++) {
