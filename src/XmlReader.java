@@ -121,7 +121,38 @@ public class XmlReader {
 
                 }
 
-                //add to cpt
+                //add ancestors
+                ArrayList<CptNode> variables = new ArrayList<>();
+
+                for (int i = 0; i<network.size(); i++) {
+                    variables.add(network.get(i));
+                }
+
+                for (int i = 0; i<network.size(); i++){
+                    CptNode cptNode = network.get(i);
+                    cptNode.addAncestors(variables);
+                }
+
+
+
+
+
+
+
+//                        ArrayList<CptNode> ancestorsToAdd = currDescendant.getParentNodes();
+
+
+
+//                        for (int j =0; j<ancestorsToAdd.size(); j++){
+//                            currDescendant.addAncestor(ancestorsToAdd.get(j));
+//                            for (int k = 0; k<)
+//                            currDescendant = currDescendant.getParentNodes().get(j);
+//                        }
+
+
+
+
+                    //add to cpt
 //                for (int i = 0; i<network.size(); i++) {
 //                    CptNode curr = network.get(i);
 //                    ArrayList<CptNode> currParentsNodes = curr.getParentNodes();
@@ -170,4 +201,20 @@ public class XmlReader {
         }
         return network;
     }
+
+//    public void addAncestors(ArrayList<CptNode> network){
+//
+//        for (int i = 0; i<network.size(); i++){
+//            CptNode var = network.get(i);
+//            if (var.getParentNodes().size() == 0){
+//                return;
+//            }
+//            else {
+//                for (int j = 0; j<var.getParentNodes().size(); j++) {
+//                    var.addAncestor(var.getParentNodes().get(j));
+//                }
+//                addAncestors(var.getParentNodes());
+//            }
+//        }
+//    }
 }

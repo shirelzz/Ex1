@@ -1,13 +1,18 @@
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class Ex1 {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SAXException {
+
+        BayesianNetwork network = new BayesianNetwork();
+        XmlReader xmlReader = new XmlReader();
+        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
+        network.printNet();
 
         String q = "P(B=T|J=T,M=T)";
 //        String numerator = q.replace("|", ",");
@@ -27,7 +32,7 @@ public class Ex1 {
 //        for (int i = 0; i< numerator.length; i++){
 //            System.out.println(numerator[i]);
 //        }
-//        HashMap<String, String> evidenceVars = new HashMap<>();
+        HashMap<String, String> evidenceVars = new HashMap<>();
 //
 //        for (int i = 0; i<numerator.length; i++){
 //            String[] varName_outcome = numerator[i].split("=");
@@ -43,13 +48,100 @@ public class Ex1 {
 //        System.out.println(vars.get("B"));
 //        vars.put("J","F");
 //        System.out.println(vars);
-//        HashMap<String, String> perm = new HashMap<>();
-//        perm.put("E", "T");
-//        perm.put("A", "T");
+        ArrayList<CptNode> hidden = new ArrayList<>();
+        CptNode E = new CptNode();
+        E.setName("E");
+        E.addOutcome("T");
+        E.addOutcome("F");
+        hidden.add(E);
+
+        CptNode P = new CptNode();
+        P.setName("P");
+        P.addOutcome("T");
+        P.addOutcome("F");
+        hidden.add(P);
+
+        CptNode A = new CptNode();
+        A.setName("A");
+        A.addOutcome("T");
+        A.addOutcome("F");
+        hidden.add(A);
+
+
+        HashMap<String, String> hiddenVars = new HashMap<>();
+        hiddenVars.put("E", "T");
+        hiddenVars.put("A", "T");
+
+        ArrayList<HashMap<String,String>> permutions = new ArrayList<>();
+
+        int numOfPerms = 8;
+        int arr[] = new int[hidden.size()];
+        for (int k = 0; k<numOfPerms; k++){
+            HashMap<String, String> perm = new HashMap<>();
+            for (int i=0; i<hidden.size(); i++){
+                CptNode currHidden = hidden.get(i);
+                String name = currHidden.getName();
+                if (arr[i]<currHidden.getOutcomes().size()){
+                    String outcome = currHidden.getOutcomes().get(arr[i]);
+                    perm.put(name,outcome);
+
+                    if (i==0){
+                        arr[0]++;
+                        if (arr[0] + 1 == hidden.get(0).getOutcomes().size()){
+                            arr[0] = 0;
+                        }
+                    }
+                    else if (i>0){
+                        if (arr[i-1] +1  == hidden.get(i-1).getOutcomes().size()){
+                            arr[i-1] = 0;
+                        }
+                        if (arr[i-1] +1 == hidden.get(i-1).getOutcomes().size()){
+                            arr[i-1] = 0;
+                        }
+
+                        if (arr[i]+1<currHidden.getOutcomes().size()) {
+                            arr[i]++;
+                        }
+                        else {
+                            arr[i] = 0;
+                        }
+                    }
+                }
+            }
+            System.out.println(perm);
+            permutions.add(perm);
+        }
+
+    }
+
+
+
 //        HashMap<String, String> all = new HashMap<>();
-//        all.putAll(evidenceVars);
+////        all.putAll(evidenceVars);
 //        all.putAll(perm);
 //        System.out.println(all);
+
+//        Iterator<String> iterator = perm.keySet().iterator();
+
+//        while (iterator.hasNext()){
+//            String key = iterator.next();
+//            System.out.println(key);   //name
+//            System.out.println(perm.get(key));  //outcome
+//        }
+//        System.out.println(perm);
+
+//        for (Map.Entry<String, String> entry : perm.entrySet()) {
+//            entry.setValue("F");
+//        }
+
+//        for (Map.Entry<String, String> entry: perm.entrySet()){
+//            String key = entry.getKey();
+////            perm.put(key, "F");
+//            System.out.println(entry.getKey());
+//            System.out.println(entry.getValue());
+//        }
+
+
 
 
 
@@ -58,8 +150,6 @@ public class Ex1 {
 
 
 //        answerQueries("input.txt");
-
-    }
 
     public static void answerQueries(String inputFileName){
 

@@ -145,9 +145,19 @@ public class Algorithms {
 
 
             for (int i = 1; i<numOfPerms; i++){ //create permutation
+                HashMap<String,String> perm = new HashMap<>();
+                Iterator<String> iterator = hidden.keySet().iterator();
+                while (iterator.hasNext()){
+                    String key = iterator.next();
+
+                }
+
+                curr.putAll(perm);
+                permutations.add(curr);
+
+
 
             }
-            permutations.add(curr);
             k++;
         }
 

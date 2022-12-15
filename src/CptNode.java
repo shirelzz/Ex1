@@ -9,6 +9,7 @@ public class CptNode {
     private String name;
     private ArrayList<String> outcome;
     private ArrayList<String> parents;
+    private ArrayList<CptNode> ancestors;
     private ArrayList<CptNode> parentNodes;
     private ArrayList<String> children;
     private ArrayList<String> probTable;
@@ -24,6 +25,7 @@ public class CptNode {
         this.probTable = new ArrayList<>(1);
         this.children = new ArrayList<>();
         this.CPT = new HashMap<>();
+        this.ancestors = new ArrayList<>();
     }
 
     public void setName(String name){
@@ -54,6 +56,66 @@ public class CptNode {
         return this.parentNodes;
     }
 
+    public void addAncestors(ArrayList<CptNode> variables){
+
+        for (int i = 0; i<variables.size(); i++){
+            CptNode var = variables.get(i);
+            ArrayList<CptNode> varParents = var.getParentNodes();
+            if (varParents.size() > 0){
+                for (int j = 0; j<varParents.size(); j++){ //add parents (copy)
+                    if (!var.getAncestors().contains(varParents.get(j))) {
+                        var.addAncestor(varParents.get(j));
+                    }
+                }
+                for (int j = 0; j<varParents.size(); j++){ //add each parent's parents
+                    CptNode gParent = varParents.get(j);
+                    if (gParent.hasParents()){
+                        ArrayList<CptNode> varGParents = gParent.getParentNodes();
+                        for (int k = 0; k<varGParents.size(); k++){
+                            if (!var.getAncestors().contains(varGParents.get(k))) {
+                                var.addAncestor(varGParents.get(k));
+                            }
+                        }
+
+                    }
+                }
+            }
+//            ArrayList<CptNode> varAnc = var.getAncestors();
+//            for (int r = 0; r<varAnc.size();){
+//                CptNode anc = varAnc.get(r);
+//                if (anc.hasParents()){
+//                    ArrayList<CptNode> ancParents = anc.getParentNodes();
+//                    for (int g = 0; g< ancParents.size(); g++){
+//                        if (!var.getAncestors().contains(ancParents.get(g))) {
+//                            var.addAncestor(ancParents.get(g));
+//                        }
+//                    }
+//
+//                }
+//            }
+        }
+
+
+//        for (int i = 0; i<variables.size(); i++){
+//            CptNode var = variables.get(i);
+//            if (var.getParentNodes().size() == 0){
+//                return;
+//            }
+//            else {
+//                for (int j = 0; j<var.getParentNodes().size(); j++) {
+//                    var.addAncestor(var.getParentNodes().get(j));
+//                }
+//                addAncestors(var.getParentNodes());
+//            }
+//        }
+    }
+
+    public void addAncestor(CptNode ancestor) { ancestors.add(ancestor);}
+
+    public ArrayList<CptNode> getAncestors(){
+        return this.ancestors;
+    }
+
     public boolean hasParents(){
         return this.getParents().size() > 0;
     }
@@ -79,7 +141,6 @@ public class CptNode {
     }
 
     public void addToCPT(String s, double d){
-
         this.CPT.put(s,d);
     }
 
@@ -91,6 +152,7 @@ public class CptNode {
         return "Name: " + this.name + "\n" +
                 "Outcomes: " + this.outcome + "\n" +
                 "Parents: " + this.parents + "\n" +
+                "Ancestors: " + this.ancestors + "\n" +
                 "Children: " + this.children + "\n" +
                 "CPT: " + this.CPT + "\n" +
                 "Table: " + this.probTable + "\n" ;
