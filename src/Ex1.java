@@ -9,6 +9,24 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) throws IOException, SAXException {
 
+        CptNode queryP = new CptNode();
+        queryP.setName("A");
+
+        CptNode queryVar = new CptNode();
+        queryVar.setName("J");
+        queryVar.addParentNode(queryP);
+
+        HashMap<String, String> evidenceVars = new HashMap<>();
+        evidenceVars.put("B", "T");
+        evidenceVars.put("J", "T");
+        evidenceVars.put("E", "T");
+
+
+        System.out.println(checkForCPT(evidenceVars, queryVar));
+
+
+
+
 //        BayesianNetwork network = new BayesianNetwork();
 //        XmlReader xmlReader = new XmlReader();
 //        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/alarm_net.xml");
@@ -47,6 +65,25 @@ public class Ex1 {
         answerQueries("input.txt");
 
     }
+
+
+    public static boolean checkForCPT(HashMap<String, String> evidenceVars, CptNode queryVar) {
+        boolean flag = false;
+        if (evidenceVars.size() - 1 == queryVar.getParentNodes().size()) { //then we might get the answer from the cpt
+            flag = true;
+            for (int j = 0; j < queryVar.getParentNodes().size(); j++) {
+                CptNode parent = queryVar.getParentNodes().get(j);
+                if (!evidenceVars.containsKey(parent.getName())) {
+                    flag = false;  //we cannot get the answer from the cpt
+                    break;
+                }
+            }
+        }
+        return flag;
+    }
+
+
+
 
     public static void answerQueries(String inputFileName) {
 

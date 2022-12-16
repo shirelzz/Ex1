@@ -47,7 +47,7 @@ public class Algorithms {
             CptNode queryVar = network.get(index);
 
             //Save evidence variables outcomes
-            HashMap<String, String> evidenceVars = new HashMap<>();              //at the end, it would look like {B=T, J=T, M=T}
+            HashMap<String, String> evidenceVars = new HashMap<>();         //at the end, it would look like {B=T, J=T, M=T}
             for (String s : numerator) {
                 String[] varName_outcome = s.split("=");       //e.g. [B,T] ...
                 evidenceVars.put(varName_outcome[0], varName_outcome[1]);       //e.g. {B=T} ...
@@ -219,30 +219,30 @@ public class Algorithms {
             addAct1++;
         }
 
-        addAct1--;
+        addAct1--; //first addition does not count
         return res;
     }
 
-    public double calcEachPerm(HashMap<String, String> currQuery) {
+    public double calcEachPerm(HashMap<String, String> currQuery) { //e.g. currQuery = {J=F, A=T, M=t, B=F, E=T}}
         double res = 1;
 
         for (int i = 0; i < network.size(); i++) {
             CptNode curr = network.get(i);
-            String currName = curr.getName();
-            String currOutcome = currQuery.get(currName);
+            String currName = curr.getName();  //e.g J
+            String currOutcome = currQuery.get(currName);  //e.g F
             HashMap<String,String> newQuery = new HashMap<>();
-            newQuery.put(currName, currOutcome);
+            newQuery.put(currName, currOutcome);   //e.g {J=F}
             if (curr.hasParents()){
-                ArrayList<String> currParents = curr.getParents();
-                for (String parentName : currParents) {
-                    String parentOutcome = currQuery.get(parentName);
-                    newQuery.put(parentName, parentOutcome);
+                ArrayList<String> currParents = curr.getParents();   //e.g J.parents = [A]
+                for (String parentName : currParents) {    //[A]
+                    String parentOutcome = currQuery.get(parentName);  //T
+                    newQuery.put(parentName, parentOutcome); //e.g {J=F, A=T}
                 }
             }
             res *= getProbFromCPT(curr, currOutcome, newQuery);
             multiAct1++;
         }
-        multiAct1--;
+        multiAct1--; //first multiplication does not count
         return res;
     }
 
@@ -282,51 +282,6 @@ public class Algorithms {
                 ans = Double.parseDouble(probTable[index]);
                 ans = formatAnswer(ans);
             }
-
-//            } else if (evidenceVars.size() - 1 < queryParents.size()) {       //e.g. P(A=T|E=F)=? or P(B=T)=?
-//                ArrayList<CptNode> hiddenParents = queryVar.getParentNodes();
-//                for (int j = 0; j < queryParents.size(); j++) {
-//                    CptNode parent = queryParents.get(j);
-//                    String parentName = parent.getName();
-//                    if (!evidenceVars.containsKey(parentName)) {
-//                        hiddenParents.add(parent);
-//                    }
-//                }
-//
-//                int index = 0;
-//                int outcomeIndex = 0;
-//
-//                for (int o = 0; o < queryVar.getOutcomes().size(); o++) {
-//                    if (queryVar.getOutcomes().get(o).equals(queryRequestedOutcome)) {
-//                        outcomeIndex = o;
-//                    }
-//                }
-//                index += outcomeIndex;
-//
-//                int multiply = queryVar.getOutcomes().size();
-//                for (int p = queryParents.size() - 1; p >= 0; p--) {
-//                    CptNode parent = queryParents.get(p);
-//                    if (!hiddenParents.contains(parent)){
-//                        outcome = evidenceVars.get(parent.getName());
-//                        for (int o = 0; o < parent.getOutcomes().size(); o++) {
-//                            if (parent.getOutcomes().get(o).equals(outcome)) {
-//                                outcomeIndex = o;
-//                                break;
-//                            }
-//                        }
-//                        index += outcomeIndex * multiply;
-//                        multiply *= parent.getOutcomes().size();
-//                    }
-//
-//
-//                }
-//
-//                String[] probTable = queryVar.getProbTable().get(0).split(" ");
-//                ans = Double.parseDouble(probTable[index]);
-//                ans = formatAnswer(ans);
-//                return ans;
-//            }
-
 
         } else {  //queryVar does not have any parents
             int index = 0;
