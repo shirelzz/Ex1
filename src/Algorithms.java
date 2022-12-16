@@ -13,6 +13,7 @@ public class Algorithms {
     private ArrayList<CptNode> hidden;
     private BayesianNetwork network;
     private ArrayList<CptNode> variables;
+    private double alpha = 0;
 //    private ArrayList<Factor> factors;
 //    private Hashtable factor;
 
@@ -28,10 +29,11 @@ public class Algorithms {
         this.hidden = new ArrayList<>();
         this.evidence = new ArrayList<>();
         this.answer = 0;
+
     }
 
-    public double runAlgo(int algo) {
-        String q = this.query;
+    public void runAlgo(int algo) {
+        String q = query;
         double ans = 0;
         if (q.contains("|")) {                //e.g. "P(B=T|J=T,M=T)"
             String numeratorStr = q.replace("|", ",");       //"P(B=T,J=T,M=T)"
@@ -41,46 +43,33 @@ public class Algorithms {
             String queryVarName = queryName_Outcome[0];                      //e.g. "B"
             String queryRequestedOutcome = queryName_Outcome[1];             //e.g. "T"
             //Find query variable
-            int index = this.network.find(queryVarName);
-            CptNode queryVar = this.network.get(index);
+            int index = network.find(queryVarName);
+            CptNode queryVar = network.get(index);
 
             //Save evidence variables outcomes
             HashMap<String, String> evidenceVars = new HashMap<>();              //at the end, it would look like {B=T, J=T, M=T}
-            for (int i = 0; i < numerator.length; i++) {
-                String[] varName_outcome = numerator[i].split("=");       //e.g. [B,T] ...
+            for (String s : numerator) {
+                String[] varName_outcome = s.split("=");       //e.g. [B,T] ...
                 evidenceVars.put(varName_outcome[0], varName_outcome[1]);       //e.g. {B=T} ...
             }
 
-            ans = getProbFromCPT(queryVar, queryRequestedOutcome, evidenceVars);
-            if (ans > 0) {   //or maybe <1 . depends. pay attention to this!!
+            if (checkForCPT(evidenceVars, queryVar)) {
+                ans = getProbFromCPT(queryVar, queryRequestedOutcome, evidenceVars);
                 ans = formatAnswer(ans);
-                this.answer = ans;
-                return ans;
+                answer = ans;
             } else {
-                /*Hidden variables outcomes.
-                This part saves them in a hashmap.
-                Later we will get their permutation for the joint distribution algorithm.
-                 */
-                HashMap<String, String> hiddenVars = new HashMap<>();
-                for (int j = 0; j < this.hidden.size(); j++) {
-                    CptNode currHidden = this.hidden.get(j);
-                    hiddenVars.put(currHidden.getName(), currHidden.getOutcomes().get(0));
-                }
-
                 if (algo == 1) {
-                    ans = jointProb(queryVar, queryRequestedOutcome, evidenceVars);
+                    ans = jointProb(queryVar, evidenceVars);
                     ans = formatAnswer(ans);
-                    this.answer = ans;
-                    return ans;
+                    answer = ans;
                 }
                 if (algo == 2) {
                     ans = eliminateBySize(q, evidenceVars);
                     ans = formatAnswer(ans);
-                    this.answer = ans;
-                    return ans;
+                    answer = ans;
                 }
             }
-        } else { //"P(B=T)"
+        } else { //e.g. "P(B=T)"
             String newQ = q.substring(2, q.length() - 1); //e.g. "B=T"
             String[] qName_Outcome = newQ.split("=");
             String name = qName_Outcome[0];
@@ -94,78 +83,53 @@ public class Algorithms {
             if (!queryVar.hasParents()) {
                 ans = getProbFromCPT(queryVar, outcome, query);
             } else {
-                ans = jointProb(queryVar, outcome, query);
+                ans = jointProb(queryVar, query);
             }
             ans = formatAnswer(ans);
-            this.answer = ans;
-            return ans;
+            answer = ans;
         }
 //        else if (algo == 3){
 //            ans = heuristicElimination(q);
 //        }
         ans = formatAnswer(ans);
-        this.answer = ans;
-        return ans;
+        answer = ans;
     }
 
-    public double jointProb(CptNode queryVar, String queryRequestedOutcome, HashMap evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
-        double ans = 0;
+    public double jointProb(CptNode queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
+        double ans;
 
         //get number of permutations for the hidden variables
         int numOfPerms = 1;
-        for (int i = 0; i < this.hidden.size(); i++) {
-            numOfPerms *= this.hidden.get(i).getOutcomes().size();
+        for (CptNode cptNode : hidden) {
+            numOfPerms *= cptNode.getOutcomes().size();
         }
 
-        String newQ = "";
-//        if (q.contains("|")) {  //then we need to calculate. Else we surely(yael?) can get the answer from the CPT
-
-            /* To answer a query like P(B=T|J=T,M=T) we need to calculate:
-            P(B=T|J=T,M=T) = P(B=T,J=T,M=T)/P(J=T,M=T)
-            We can also write that as:
-            P(B=T|J=T,M=T) = P(B=T,J=T,M=T) / (P(B=T,J=T,M=T) + P(B=F,J=T,M=T))
-            */
-//            String numeratorQ = q.replace("|", ",");                   //e.g. numeratorQ = "P(B=T,J=T,M=T)"
-//            String tempDenominator = numeratorQ.substring(2, numeratorQ.length()-1);     //e.g. tempDenominator = "B=T,J=T,M=T"
-//            String[] tempDenominatorArr = tempDenominator.split(",");             //e.g. tempDenominatorArr = ["B=T"], ["J=T"], ["M=T"]
-//            String denominatorQ = "P(" ;
-//            for (int j = 1; j<tempDenominatorArr.length; j++){
-//                denominatorQ += tempDenominatorArr[j];
-//                if (j == tempDenominatorArr.length-1){
-//                    denominatorQ += ")";
-//                }
-//                else {
-//                    denominatorQ += ",";
-//                }
-//            }
         double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
+        String orgQueryOutcome = evidenceVars.get(queryVar.getName());
         double denominatorAns = 0;
 
 
-            /*
+        /*
             For the denominator we will sum all possible outcomes of the query variable
-             */
-        int counter = 0;
+        */
         for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
             HashMap<String, String> queryVarOutcome = new HashMap<>();
             queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
             queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
-            denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
-            counter++;
+            if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))){
+                denominatorAns += numeratorAns;
+            }
+            else{
+                denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
+            }
+            this.alpha = denominatorAns;
+            addAct1++;
         }
-//            evidenceVars.get(queryVarName).
-        ans = numeratorAns;
+        addAct1--; //first addition does not count
         double alpha = normalize(denominatorAns);
-        ans = alpha * ans;
+        ans = alpha * numeratorAns;
         ans = formatAnswer(ans);
         return ans;
-//        } else {
-//            HashMap<String,String> evidence = new HashMap<>();
-//            evidence.put(queryVar.getName(), queryRequestedOutcome);
-//            ans = getProbFromCPT(queryVar, queryRequestedOutcome, evidenceVars);
-//            ans = formatAnswer(ans);
-//            this.answer = ans;
-//        }
     }
 
     public double normalize(double res) { //see later how to normalize
@@ -179,11 +143,11 @@ public class Algorithms {
     public ArrayList<HashMap<String, String>> getPerms(int numOfPerms) {
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
-        int outcomesSizes[] = new int[this.hidden.size()];
-        int hiddenSize = this.hidden.size();
+        int[] outcomesSizes = new int[hidden.size()];
+        int hiddenSize = hidden.size();
 
         for (int i = 0; i < hiddenSize; i++) {
-            CptNode curr = this.hidden.get(i);
+            CptNode curr = hidden.get(i);
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
@@ -198,14 +162,14 @@ public class Algorithms {
             outcomesSizes[i] = m;
         }
 
-        String name = "";
-        String outcome = "";
-        int outcomes[] = new int[hiddenSize];
+        String name;
+        String outcome;
+        int[] outcomes = new int[hiddenSize];
 
         for (int i = 0; i < numOfPerms; i++) {
             HashMap<String, String> perm = new HashMap<>();
             for (int j = 0; j < hiddenSize; j++) {
-                CptNode currHidden = this.hidden.get(j);
+                CptNode currHidden = hidden.get(j);
                 name = currHidden.getName();
                 int numOfOutcomes = currHidden.getOutcomes().size();
                 if (outcomes[j] >= numOfOutcomes) {
@@ -233,118 +197,53 @@ public class Algorithms {
         return permutations;
     }
 
-    public double eliminateBySize(String q, HashMap evidenceVars) {
+    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
         double ans = 0;
 
         return ans;
     }
 
-    public double calcProb(int numOfPerms, HashMap evidenceVars, CptNode queryVar) {
-        double ans = 0;
+    public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, CptNode queryVar) {
+        double res = 0;
 
-        //Create an array list that contains all permutations on the hidden variables
+        //Create an array list that contains all permutations on the *hidden* variables
         ArrayList<HashMap<String, String>> perms;
         perms = getPerms(numOfPerms);
+
+        //loop over all hidden permutations
         for (int i = 0; i < numOfPerms; i++) {
             HashMap<String, String> currQuery = new HashMap<>();
             currQuery.putAll(evidenceVars);
             currQuery.putAll(perms.get(i));
-            ans += calcEachPerm(currQuery, queryVar);
-            this.addAct1++;
+            res += calcEachPerm(currQuery);
+            addAct1++;
         }
-        return ans;
+
+        addAct1--;
+        return res;
     }
 
-//    public void heuristicElimination(){
-//
-//    }
+    public double calcEachPerm(HashMap<String, String> currQuery) {
+        double res = 1;
 
-    public double calcEachPerm(HashMap<String, String> currQuery, CptNode queryVar) {
-        double ans = 1;
-        String requestedOutcome = currQuery.get(queryVar.getName());
-
-        for (int i = 0; i < this.network.size(); i++) {
-            CptNode curr = this.network.get(i);
+        for (int i = 0; i < network.size(); i++) {
+            CptNode curr = network.get(i);
             String currName = curr.getName();
-            if (curr.hasParents()) {
-
-            } else {
-                ans *= getProbFromCPT(queryVar, requestedOutcome, currQuery);
+            String currOutcome = currQuery.get(currName);
+            HashMap<String,String> newQuery = new HashMap<>();
+            newQuery.put(currName, currOutcome);
+            if (curr.hasParents()){
+                ArrayList<String> currParents = curr.getParents();
+                for (String parentName : currParents) {
+                    String parentOutcome = currQuery.get(parentName);
+                    newQuery.put(parentName, parentOutcome);
+                }
             }
-            currQuery.get(currName);
+            res *= getProbFromCPT(curr, currOutcome, newQuery);
+            multiAct1++;
         }
-
-        return ans;
-    }
-
-    public double formatAnswer(double ans) {
-        double value = ans;
-        value = Double.parseDouble(new DecimalFormat("#.#####").format(value));
-        return value;
-    }
-
-    public double getAnswer() {
-        return formatAnswer(this.answer);
-    }
-
-    public int getAddActions1() {
-        return this.addAct1;
-    }
-
-    public int getMultiplyActions1() {
-        return this.multiAct1;
-    }
-
-    public int getAddActions2() {
-        return this.addAct2;
-    }
-
-    public int getMultiplyActions2() {
-        return this.multiAct2;
-    }
-
-    public void addToEvidence(String query) {
-        for (int i = 0; i < variables.size(); i++) {
-            CptNode currVar = variables.get(i);
-            String currVarName = currVar.getName();
-            if (query.contains(currVarName) && !this.evidence.contains(currVarName)) {
-                this.evidence.add(currVar);
-            }
-        }
-    }
-
-    public void addToHidden(String query) {
-        for (int i = 0; i < this.variables.size(); i++) {
-            CptNode currVar = this.variables.get(i);
-            String currVarName = currVar.getName();
-            if (!query.contains(currVarName) && !this.hidden.contains(currVarName)) {
-                this.hidden.add(currVar);
-            }
-        }
-    }
-
-    public void removeUnnecessaryVars() {
-
-        ArrayList<CptNode> leafNodes = new ArrayList<>();
-
-        for (CptNode currVar : this.variables) {
-            if (!currVar.hasChildren()) {
-                leafNodes.add(currVar);
-            }
-        }
-
-        for (int i = 0; i < leafNodes.size(); i++) {
-            CptNode currVar = this.variables.get(i);
-            if (!(this.hidden.contains(currVar) && this.evidence.contains(currVar))) {
-                leafNodes.remove(currVar);
-            }
-        }
-
-        for (int i = 0; i < this.variables.size(); i++) {
-
-        }
-
-
+        multiAct1--;
+        return res;
     }
 
     public double getProbFromCPT(CptNode queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
@@ -446,13 +345,99 @@ public class Algorithms {
         return ans;
     }
 
+    public boolean checkForCPT(HashMap<String, String> evidenceVars, CptNode queryVar) {
+        boolean flag = false;
+        if (evidenceVars.size() - 1 == queryVar.getParentNodes().size()) { //then we might get the answer from the cpt
+            flag = true;
+            for (int j = 0; j < queryVar.getParentNodes().size(); j++) {
+                CptNode parent = queryVar.getParentNodes().get(j);
+                if (!evidenceVars.containsKey(parent.getName())) {
+                    flag = false;  //we cannot get the answer from the cpt
+                    break;
+                }
+            }
+        }
+        return flag;
+    }
+
+    //    public void heuristicElimination(){
+    //
+    //    }
+
+    public double formatAnswer(double ans) {
+        double value = ans;
+        value = Double.parseDouble(new DecimalFormat("#.#####").format(value));
+        return value;
+    }
+
+    public double getAnswer() {
+        return formatAnswer(this.answer);
+    }
+
+    public int getAddActions1() {
+        return this.addAct1;
+    }
+
+    public int getMultiplyActions1() {
+        return this.multiAct1;
+    }
+
+    public int getAddActions2() {
+        return this.addAct2;
+    }
+
+    public int getMultiplyActions2() {
+        return this.multiAct2;
+    }
+
+    public void addToEvidence(String query) {
+        for (CptNode currVar : variables) {
+            String currVarName = currVar.getName();
+            if (query.contains(currVarName) && !this.evidence.contains(currVar)) {
+                this.evidence.add(currVar);
+            }
+        }
+    }
+
+    public void addToHidden(String query) {
+        for (CptNode currVar : variables) {
+            String currVarName = currVar.getName();
+            if (!query.contains(currVarName) && !hidden.contains(currVar)) {
+                hidden.add(currVar);
+            }
+        }
+    }
+
+    public void removeUnnecessaryVars() {
+
+        ArrayList<CptNode> leafNodes = new ArrayList<>();
+
+        for (CptNode currVar : variables) {
+            if (!currVar.hasChildren()) {
+                leafNodes.add(currVar);
+            }
+        }
+
+        for (int i = 0; i < leafNodes.size(); i++) {
+            CptNode currVar = variables.get(i);
+            if (!(hidden.contains(currVar) && evidence.contains(currVar))) {
+                leafNodes.remove(currVar);
+            }
+        }
+
+        for (int i = 0; i < variables.size(); i++) {
+
+        }
+
+
+    }
+
     public void dropFromHidden() {
-        for (int i = 0; i < this.hidden.size(); i++) {
-            CptNode var = this.hidden.get(i);
-            for (int j = 0; j < this.evidence.size(); j++) {
-                CptNode evi = this.evidence.get(j);
-                if (evi.getAncestors().contains(var.getName())) {
-                    this.hidden.remove(var);
+        for (int i = 0; i < hidden.size(); i++) {
+            CptNode var = hidden.get(i);
+            for (CptNode evi : evidence) {
+                if (evi.getAncestors().contains(var)) {
+                    hidden.remove(var);
                 }
             }
         }
@@ -460,18 +445,22 @@ public class Algorithms {
 
     public String printHidden() {
         String print = "";
-        for (int i = 0; i < this.hidden.size(); i++) {
-            print += this.hidden.get(i).getName() + ", ";
+        for (CptNode cptNode : this.hidden) {
+            print += cptNode.getName() + ", ";
         }
         return print;
     }
 
     public String printEvidence() {
         String print = "";
-        for (int i = 0; i < this.evidence.size(); i++) {
-            print += this.evidence.get(i).getName() + ", ";
+        for (CptNode cptNode : this.evidence) {
+            print += cptNode.getName() + ", ";
         }
         return print;
+    }
+
+    public double getAlpha(){
+        return alpha;
     }
 }
 
