@@ -9,10 +9,10 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) throws IOException, SAXException {
 
-        CptNode queryP = new CptNode();
+        Variable queryP = new Variable();
         queryP.setName("A");
 
-        CptNode queryVar = new CptNode();
+        Variable queryVar = new Variable();
         queryVar.setName("J");
         queryVar.addParentNode(queryP);
 
@@ -67,12 +67,12 @@ public class Ex1 {
     }
 
 
-    public static boolean checkForCPT(HashMap<String, String> evidenceVars, CptNode queryVar) {
+    public static boolean checkForCPT(HashMap<String, String> evidenceVars, Variable queryVar) {
         boolean flag = false;
         if (evidenceVars.size() - 1 == queryVar.getParentNodes().size()) { //then we might get the answer from the cpt
             flag = true;
             for (int j = 0; j < queryVar.getParentNodes().size(); j++) {
-                CptNode parent = queryVar.getParentNodes().get(j);
+                Variable parent = queryVar.getParentNodes().get(j);
                 if (!evidenceVars.containsKey(parent.getName())) {
                     flag = false;  //we cannot get the answer from the cpt
                     break;

@@ -37,7 +37,7 @@ public class XmlReader {
 
                 for (int i = 0; i < variableList.getLength(); i++) {
                     Node variable = variableList.item(i);
-                    CptNode varNode = new CptNode();
+                    Variable varNode = new Variable();
 
                     if (variable.getNodeType() == Node.ELEMENT_NODE) {
                         Element variableElement = (Element) variable;
@@ -67,7 +67,7 @@ public class XmlReader {
                     }
 
                     for (int k = 0; k < network.size(); k++) {
-                        CptNode currNode = network.get(k);
+                        Variable currNode = network.get(k);
 
                         NodeList givenList = definition.getChildNodes();
                         for (int j = 0; j < givenList.getLength(); j++) {
@@ -92,10 +92,10 @@ public class XmlReader {
                 }
 
                 for (int i = 0; i<network.size(); i++){
-                    CptNode curr = network.get(i);
+                    Variable curr = network.get(i);
                     if (curr.hasParents()){
                         for (int j =0; j<curr.getParents().size(); j++){
-                            CptNode parent;
+                            Variable parent;
                             String parentName = curr.getParents().get(j);
                             String childName = curr.getName();
                             int index = network.find(parentName);
@@ -106,13 +106,13 @@ public class XmlReader {
 
                 //add parents nodes
                 for (int i = 0; i<network.size(); i++) {
-                    CptNode currChild = network.get(i);
+                    Variable currChild = network.get(i);
                     String currChildName = currChild.getName();
                     ArrayList parentsNames = currChild.getParents();
 
                     if (parentsNames.size()>0){
                         for (int k=0; k<network.size(); k++){
-                            CptNode currParentNode = network.get(k);
+                            Variable currParentNode = network.get(k);
                             if (currParentNode.getChildren().contains(currChildName)) {
                                 currChild.addParentNode(currParentNode);
                             }
@@ -122,14 +122,14 @@ public class XmlReader {
                 }
 
                 //add ancestors
-                ArrayList<CptNode> variables = new ArrayList<>();
+                ArrayList<Variable> variables = new ArrayList<>();
 
                 for (int i = 0; i<network.size(); i++) {
                     variables.add(network.get(i));
                 }
 
                 for (int i = 0; i<network.size(); i++){
-                    CptNode cptNode = network.get(i);
+                    Variable cptNode = network.get(i);
                     cptNode.addAncestors(variables);
                 }
 

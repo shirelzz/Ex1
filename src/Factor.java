@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Factor {
 
     private String evidence;
-    private ArrayList<CptNode> variables;
+    private ArrayList<Variable> variables;
 
     Factor(){
 

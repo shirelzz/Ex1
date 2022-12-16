@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class CptNode {
+public class Variable {
 
     private String name;
     private ArrayList<String> outcome;
     private ArrayList<String> parents;
-    private ArrayList<CptNode> ancestors;
-    private ArrayList<CptNode> parentNodes;
+    private ArrayList<Variable> ancestors;
+    private ArrayList<Variable> parentNodes;
     private ArrayList<String> children;
     private ArrayList<String> probTable;
     private HashMap<String, Double> CPT;
@@ -18,7 +18,7 @@ public class CptNode {
     /*
     Constructor
      */
-    CptNode() throws IOException, SAXException {
+    Variable() throws IOException, SAXException {
         this.outcome = new ArrayList<>(2) ;
         this.parents = new ArrayList<>();
         this.parentNodes = new ArrayList<>();
@@ -50,16 +50,16 @@ public class CptNode {
         return this.parents;
     }
 
-    public void addParentNode(CptNode parent) { parentNodes.add(parent);}
+    public void addParentNode(Variable parent) { parentNodes.add(parent);}
 
-    public ArrayList<CptNode> getParentNodes(){
+    public ArrayList<Variable> getParentNodes(){
         return this.parentNodes;
     }
 
-    public CptNode findParent(String name){
+    public Variable findParent(String name){
         int index = 0;
         for (int i = 0; i<this.parentNodes.size(); i++){
-            CptNode p = this.parentNodes.get(i);
+            Variable p = this.parentNodes.get(i);
             if (p.getName().equals(name)){
                 index = i;
                 break;
@@ -68,11 +68,11 @@ public class CptNode {
         return this.parentNodes.get(index);
     }
 
-    public void addAncestors(ArrayList<CptNode> variables){
+    public void addAncestors(ArrayList<Variable> variables){
 
         for (int i = 0; i<variables.size(); i++) {
-            CptNode var = variables.get(i);
-            ArrayList<CptNode> varParents = var.getParentNodes();
+            Variable var = variables.get(i);
+            ArrayList<Variable> varParents = var.getParentNodes();
             if (varParents.size() > 0) {
                 for (int j = 0; j < varParents.size(); j++) { //add parents (copy)
                     if (!var.getAncestors().contains(varParents.get(j))) {
@@ -80,9 +80,9 @@ public class CptNode {
                     }
                 }
                 for (int j = 0; j < varParents.size(); j++) { //add each parent's parents
-                    CptNode gParent = varParents.get(j);
+                    Variable gParent = varParents.get(j);
                     if (gParent.hasParents()) {
-                        ArrayList<CptNode> varGParents = gParent.getParentNodes();
+                        ArrayList<Variable> varGParents = gParent.getParentNodes();
                         for (int k = 0; k < varGParents.size(); k++) {
                             if (!var.getAncestors().contains(varGParents.get(k))) {
                                 var.addAncestor(varGParents.get(k));
@@ -95,9 +95,9 @@ public class CptNode {
         }
     }
 
-    public void addAncestor(CptNode ancestor) { ancestors.add(ancestor);}
+    public void addAncestor(Variable ancestor) { ancestors.add(ancestor);}
 
-    public ArrayList<CptNode> getAncestors(){
+    public ArrayList<Variable> getAncestors(){
         return this.ancestors;
     }
 

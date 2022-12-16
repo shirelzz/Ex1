@@ -9,10 +9,10 @@ public class Algorithms {
     private int multiAct1 = 0;
     private int addAct2 = 0;
     private int multiAct2 = 0;
-    private ArrayList<CptNode> evidence;
-    private ArrayList<CptNode> hidden;
+    private ArrayList<Variable> evidence;
+    private ArrayList<Variable> hidden;
     private BayesianNetwork network;
-    private ArrayList<CptNode> variables;
+    private ArrayList<Variable> variables;
     private double alpha = 0;
 //    private ArrayList<Factor> factors;
 //    private Hashtable factor;
@@ -23,7 +23,7 @@ public class Algorithms {
         this.network = network;
         this.variables = new ArrayList<>();
         for (int i = 0; i < network.size(); i++) {
-            CptNode curr = network.get(i);
+            Variable curr = network.get(i);
             this.variables.add(curr);
         }
         this.hidden = new ArrayList<>();
@@ -44,7 +44,7 @@ public class Algorithms {
             String queryRequestedOutcome = queryName_Outcome[1];             //e.g. "T"
             //Find query variable
             int index = network.find(queryVarName);
-            CptNode queryVar = network.get(index);
+            Variable queryVar = network.get(index);
 
             //Save evidence variables outcomes
             HashMap<String, String> evidenceVars = new HashMap<>();         //at the end, it would look like {B=T, J=T, M=T}
@@ -79,7 +79,7 @@ public class Algorithms {
             query.put(name, outcome);
 
             int index = network.find(name);
-            CptNode queryVar = network.get(index);
+            Variable queryVar = network.get(index);
             if (!queryVar.hasParents()) {
                 ans = getProbFromCPT(queryVar, outcome, query);
             } else {
@@ -95,12 +95,12 @@ public class Algorithms {
         answer = ans;
     }
 
-    public double jointProb(CptNode queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
+    public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans;
 
         //get number of permutations for the hidden variables
         int numOfPerms = 1;
-        for (CptNode cptNode : hidden) {
+        for (Variable cptNode : hidden) {
             numOfPerms *= cptNode.getOutcomes().size();
         }
 
@@ -122,11 +122,11 @@ public class Algorithms {
             else{
                 denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
             }
-            this.alpha = denominatorAns;
             addAct1++;
         }
         addAct1--; //first addition does not count
         double alpha = normalize(denominatorAns);
+        this.alpha = numeratorAns;
         ans = alpha * numeratorAns;
         ans = formatAnswer(ans);
         return ans;
@@ -147,7 +147,7 @@ public class Algorithms {
         int hiddenSize = hidden.size();
 
         for (int i = 0; i < hiddenSize; i++) {
-            CptNode curr = hidden.get(i);
+            Variable curr = hidden.get(i);
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
@@ -169,7 +169,7 @@ public class Algorithms {
         for (int i = 0; i < numOfPerms; i++) {
             HashMap<String, String> perm = new HashMap<>();
             for (int j = 0; j < hiddenSize; j++) {
-                CptNode currHidden = hidden.get(j);
+                Variable currHidden = hidden.get(j);
                 name = currHidden.getName();
                 int numOfOutcomes = currHidden.getOutcomes().size();
                 if (outcomes[j] >= numOfOutcomes) {
@@ -203,7 +203,7 @@ public class Algorithms {
         return ans;
     }
 
-    public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, CptNode queryVar) {
+    public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, Variable queryVar) {
         double res = 0;
 
         //Create an array list that contains all permutations on the *hidden* variables
@@ -227,7 +227,7 @@ public class Algorithms {
         double res = 1;
 
         for (int i = 0; i < network.size(); i++) {
-            CptNode curr = network.get(i);
+            Variable curr = network.get(i);
             String currName = curr.getName();  //e.g J
             String currOutcome = currQuery.get(currName);  //e.g F
             HashMap<String,String> newQuery = new HashMap<>();
@@ -246,12 +246,12 @@ public class Algorithms {
         return res;
     }
 
-    public double getProbFromCPT(CptNode queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
+    public double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
         double ans = 0;
         String outcome = "";
 
         if (queryVar.hasParents()) { //e.g. P(A=T|E=T,B=F)=?
-            ArrayList<CptNode> queryParents = queryVar.getParentNodes();
+            ArrayList<Variable> queryParents = queryVar.getParentNodes();
 
             if (evidenceVars.size() - 1 == queryParents.size()) {
                 int index = 0;
@@ -266,7 +266,7 @@ public class Algorithms {
 
                 int multiply = queryVar.getOutcomes().size();
                 for (int p = queryParents.size() - 1; p >= 0; p--) {
-                    CptNode parent = queryParents.get(p);
+                    Variable parent = queryParents.get(p);
                     outcome = evidenceVars.get(parent.getName());
                     for (int o = 0; o < parent.getOutcomes().size(); o++) {
                         if (parent.getOutcomes().get(o).equals(outcome)) {
@@ -300,12 +300,12 @@ public class Algorithms {
         return ans;
     }
 
-    public boolean checkForCPT(HashMap<String, String> evidenceVars, CptNode queryVar) {
+    public boolean checkForCPT(HashMap<String, String> evidenceVars, Variable queryVar) {
         boolean flag = false;
         if (evidenceVars.size() - 1 == queryVar.getParentNodes().size()) { //then we might get the answer from the cpt
             flag = true;
             for (int j = 0; j < queryVar.getParentNodes().size(); j++) {
-                CptNode parent = queryVar.getParentNodes().get(j);
+                Variable parent = queryVar.getParentNodes().get(j);
                 if (!evidenceVars.containsKey(parent.getName())) {
                     flag = false;  //we cannot get the answer from the cpt
                     break;
@@ -346,7 +346,7 @@ public class Algorithms {
     }
 
     public void addToEvidence(String query) {
-        for (CptNode currVar : variables) {
+        for (Variable currVar : variables) {
             String currVarName = currVar.getName();
             if (query.contains(currVarName) && !this.evidence.contains(currVar)) {
                 this.evidence.add(currVar);
@@ -355,7 +355,7 @@ public class Algorithms {
     }
 
     public void addToHidden(String query) {
-        for (CptNode currVar : variables) {
+        for (Variable currVar : variables) {
             String currVarName = currVar.getName();
             if (!query.contains(currVarName) && !hidden.contains(currVar)) {
                 hidden.add(currVar);
@@ -365,16 +365,16 @@ public class Algorithms {
 
     public void removeUnnecessaryVars() {
 
-        ArrayList<CptNode> leafNodes = new ArrayList<>();
+        ArrayList<Variable> leafNodes = new ArrayList<>();
 
-        for (CptNode currVar : variables) {
+        for (Variable currVar : variables) {
             if (!currVar.hasChildren()) {
                 leafNodes.add(currVar);
             }
         }
 
         for (int i = 0; i < leafNodes.size(); i++) {
-            CptNode currVar = variables.get(i);
+            Variable currVar = variables.get(i);
             if (!(hidden.contains(currVar) && evidence.contains(currVar))) {
                 leafNodes.remove(currVar);
             }
@@ -389,8 +389,8 @@ public class Algorithms {
 
     public void dropFromHidden() {
         for (int i = 0; i < hidden.size(); i++) {
-            CptNode var = hidden.get(i);
-            for (CptNode evi : evidence) {
+            Variable var = hidden.get(i);
+            for (Variable evi : evidence) {
                 if (evi.getAncestors().contains(var)) {
                     hidden.remove(var);
                 }
@@ -400,7 +400,7 @@ public class Algorithms {
 
     public String printHidden() {
         String print = "";
-        for (CptNode cptNode : this.hidden) {
+        for (Variable cptNode : this.hidden) {
             print += cptNode.getName() + ", ";
         }
         return print;
@@ -408,7 +408,7 @@ public class Algorithms {
 
     public String printEvidence() {
         String print = "";
-        for (CptNode cptNode : this.evidence) {
+        for (Variable cptNode : this.evidence) {
             print += cptNode.getName() + ", ";
         }
         return print;
