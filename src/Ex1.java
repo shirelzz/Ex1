@@ -190,7 +190,7 @@ public class Ex1 {
                         "hidden: " + jd.printHidden() + "\n" +
                         "evidence: " + jd.printEvidence() + "\n" +
                         "alpha: = " + jd.getAlpha() + "\n" +
-                        "perms: = " + jd.getPerms() + "\n"
+                        "perms: = " + jd.getPermsHid() + "\n"
                 );
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination

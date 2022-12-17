@@ -65,7 +65,7 @@ public class Algorithms {
                     answer = ans;
                 }
                 if (algo == 2) {
-                    ans = eliminateBySize(q, evidenceVars);
+                    ans = varElm(queryVar, evidenceVars);
                     ans = formatAnswer(ans);
                     answer = ans;
                 }
@@ -95,6 +95,34 @@ public class Algorithms {
         ans = formatAnswer(ans);
         answer = ans;
     }
+
+    public double varElm(Variable queryVar, HashMap<String,String> evidenceVars){
+        double ans = 0;
+        ArrayList<Factor> factors = new ArrayList<>();
+        Factor factor = new Factor(evidenceVars);
+
+        ArrayList<HashMap<String, String>> hiddenPerms = getPermsHid(numOfPerm);
+        ArrayList<String> values = new ArrayList<>();
+        for (int i = 0; i<hiddenPerms.size(); i++){
+//            values.add();
+        }
+        factor.defFactor(hiddenPerms, values);
+
+
+        return ans;
+    }
+
+    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
+        double ans = 0;
+
+        return ans;
+    }
+
+
+    //    public void heuristicElimination(){
+    //
+    //    }
+
 
     public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans;
@@ -142,7 +170,7 @@ public class Algorithms {
         return alpha;
     }
 
-    public ArrayList<HashMap<String, String>> getPerms(int numOfPerms) {
+    public ArrayList<HashMap<String, String>> getPermsHid(int numOfPerms) {
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
         int[] outcomesSizes = new int[hidden.size()];
@@ -199,10 +227,61 @@ public class Algorithms {
         return permutations;
     }
 
-    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
-        double ans = 0;
+    public ArrayList<HashMap<String, String>> getPermsEvi(int numOfPerms) {
 
-        return ans;
+        ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
+        int[] outcomesSizes = new int[evidence.size()];
+        int eviSize = evidence.size();
+
+        for (int i = 0; i < eviSize; i++) {
+            Variable curr = evidence.get(i);
+            outcomesSizes[i] = curr.getOutcomes().size();
+        }
+
+        int m = outcomesSizes[0];
+        int temp = outcomesSizes[1];
+        outcomesSizes[1] = m;
+        m = temp;
+        outcomesSizes[0] = 0;
+
+        for (int i = 2; i < outcomesSizes.length; i++) {
+            m *= outcomesSizes[i];
+            outcomesSizes[i] = m;
+        }
+
+        String name;
+        String outcome;
+        int[] outcomes = new int[eviSize];
+
+        for (int i = 0; i < numOfPerms; i++) {
+            HashMap<String, String> perm = new HashMap<>();
+            for (int j = 0; j < eviSize; j++) {
+                Variable currEvi = evidence.get(j);
+                name = currEvi.getName();
+                int numOfOutcomes = currEvi.getOutcomes().size();
+                if (outcomes[j] >= numOfOutcomes) {
+                    outcomes[j] = 0;
+                }
+                outcome = currEvi.getOutcomes().get(outcomes[j]);
+                if (j == 0) {
+                    outcomes[j]++;
+                } else {
+                    if ((i % outcomesSizes[j] == 0) && (i != 0)) {
+                        if (outcomes[j] + 1 >= numOfOutcomes) {
+                            outcomes[j] = 0;
+                        } else {
+                            outcomes[j]++;
+                        }
+                        outcome = currEvi.getOutcomes().get(outcomes[j]);
+                    }
+                }
+                perm.put(name, outcome);
+            }
+            if (!permutations.contains(perm)) {
+                permutations.add(perm);
+            }
+        }
+        return permutations;
     }
 
     public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, Variable queryVar) {
@@ -210,7 +289,7 @@ public class Algorithms {
 
         //Create an array list that contains all permutations on the *hidden* variables
         ArrayList<HashMap<String, String>> perms;
-        perms = getPerms(numOfPerms);
+        perms = getPermsHid(numOfPerms);
 
         //loop over all hidden permutations
         for (int i = 0; i < numOfPerms; i++) {
@@ -317,10 +396,6 @@ public class Algorithms {
         return flag;
     }
 
-    //    public void heuristicElimination(){
-    //
-    //    }
-
     public double formatAnswer(double ans) {
         double value = ans;
         value = Double.parseDouble(new DecimalFormat("#.#####").format(value));
@@ -420,7 +495,7 @@ public class Algorithms {
         return alpha;
     }
 
-    public double getPerms(){
+    public double getPermsHid(){
         return numOfPerm;
     }
 
