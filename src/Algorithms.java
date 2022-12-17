@@ -14,6 +14,7 @@ public class Algorithms {
     private BayesianNetwork network;
     private ArrayList<Variable> variables;
     private double alpha = 0;
+    private int numOfPerm = 1;
 //    private ArrayList<Factor> factors;
 //    private Hashtable factor;
 
@@ -100,9 +101,10 @@ public class Algorithms {
 
         //get number of permutations for the hidden variables
         int numOfPerms = 1;
-        for (Variable cptNode : hidden) {
-            numOfPerms *= cptNode.getOutcomes().size();
+        for (Variable variable : hidden) {
+            numOfPerms *= variable.getOutcomes().size();
         }
+        this.numOfPerm = numOfPerms;
 
         double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
         String orgQueryOutcome = evidenceVars.get(queryVar.getName());
@@ -189,9 +191,9 @@ public class Algorithms {
                     }
                 }
                 perm.put(name, outcome);
-                if (!permutations.contains(perm)) {
-                    permutations.add(perm);
-                }
+            }
+            if (!permutations.contains(perm)) {
+                permutations.add(perm);
             }
         }
         return permutations;
@@ -417,5 +419,10 @@ public class Algorithms {
     public double getAlpha(){
         return alpha;
     }
+
+    public double getPerms(){
+        return numOfPerm;
+    }
+
 }
 
