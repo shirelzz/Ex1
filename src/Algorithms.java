@@ -99,9 +99,9 @@ public class Algorithms {
     public double varElm(Variable queryVar, HashMap<String,String> evidenceVars){
         double ans = 0;
         ArrayList<Factor> factors = new ArrayList<>();
-        Factor factor = new Factor(evidenceVars);
+        Factor factor = new Factor(hidden, evidence);
 
-        ArrayList<HashMap<String, String>> hiddenPerms = getPermsHid(numOfPerm);
+        ArrayList<HashMap<String, String>> hiddenPerms = getPermsHid(numOfPerm);  //the perms on the hidden or evidence vars?
         ArrayList<String> values = new ArrayList<>();
         for (int i = 0; i<hiddenPerms.size(); i++){
 //            values.add();
@@ -227,7 +227,7 @@ public class Algorithms {
         return permutations;
     }
 
-    public ArrayList<HashMap<String, String>> getPermsEvi(int numOfPerms) {
+    public ArrayList<HashMap<String, String>> getPermsG(int numOfPerms) {
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
         int[] outcomesSizes = new int[evidence.size()];

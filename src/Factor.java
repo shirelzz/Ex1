@@ -1,27 +1,32 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
 public class Factor {
 
-    private String evidence;
-    private HashMap<String,String>  variables;
+    private ArrayList<Variable> evidence;
+    private ArrayList<Variable> hidden;
+    private HashMap<String, String> variables;
     private ArrayList<HashMap<String, String>> factor;
     private HashMap<String, String> factorElem;
 
-    Factor(HashMap<String,String> evidenceVars) {
+    Factor(ArrayList<Variable> hidden, ArrayList<Variable> evidence) {
         this.factor = new ArrayList<>();
         this.factorElem = new HashMap<>();
-        this.variables = evidenceVars;
+        this.evidence = evidence;
+        this.hidden = hidden;
     }
 
-    public void defFactor(ArrayList<HashMap<String,String>> permutations, ArrayList<String> values) {
-        for (int i =0; i< permutations.size(); i++){
-            HashMap<String,String> currRow = permutations.get(i);
+    public void defFactor(ArrayList<HashMap<String, String>> permutations, ArrayList<String> values) {
+        for (int i = 0; i < permutations.size(); i++) {
+            HashMap<String, String> currRow = permutations.get(i);
             String val = values.get(i);
             currRow.put("val", val);
             factor.add(currRow);
         }
+    }
+
+    public void addRow(HashMap<String, String> row) {
+        factor.add(row);
     }
 
     public void restrictFactor(Variable variable, String val) {
@@ -61,18 +66,107 @@ public class Factor {
     }
 
     public Factor sumOut(Variable variable) {
-        Factor newFactor = new Factor(this.variables);
+        Factor newFactor = new Factor(this.hidden, this.evidence);
+        double[] values = new double[factor.size()];
+
         for (int i = 0; i < factor.size(); i++) {
-            HashMap<String,String> currRow = factor.get(i);
-            double value = Double.parseDouble(currRow.get("val"));
+            HashMap<String, String> currRow = factor.get(i);
+            currRow.remove(variable.getName());
+            double value1 = Double.parseDouble(currRow.get("val"));
+            values[i] += value1;
 
-
+            for (int j = i; j < factor.size(); j++) {
+                HashMap<String, String> row = factor.get(j);
+                row.remove(variable.getName());
+                if (resembling(row, currRow, variable)) {
+                    double value2 = Double.parseDouble(row.get("val"));
+                    values[i] += value2;
+                    currRow.put("val", String.valueOf(values[i]));
+                }
+            }
+            newFactor.addRow(currRow);
         }
         return newFactor;
     }
 
-    public void multiplyFactors() {
+    private boolean resembling(HashMap<String, String> row, HashMap<String, String> currRow, Variable variable) {
+        boolean flag = true;
+        for (int v = 0; v < evidence.size(); v++) {  //evidence or hidden?
+            Variable currVar = evidence.get(v);
+            String name = currVar.getName();
+            if (name.equals(variable.getName())) {
+                continue;
+            } else if (!row.get(name).equals(currRow.get(name))) {
+                flag = false;
+                break;
+            }
+        }
+        return flag;
+    }
 
+    public Factor multiplyFactors(Factor f1, Factor f2) {
+        Factor newFactor = new Factor(hidden,evidence);
+        ArrayList<Variable> variables = new ArrayList<>(); //the variables of f1 and f2
+        ArrayList<HashMap<String,String>> perms = getPermsG(variables);
+        double[] values = new double[perms.size()];
+
+        for (int p = 0; p<perms.size(); p++){
+            HashMap<String,String> perm = perms.get(p);
+            newFactor.addRow(perm);
+            double value;
+
+            for (int i = 0; i<f1.getEvidence().size(); i++){ //evidence/ size?
+                HashMap<String,String> row = f1.get(i);
+                Variable variable = f1.getEvidence().get(i);
+                String varName = variable.getName();
+                if (resemble(row,perm)){
+                    value = Double.parseDouble(row.get(varName));
+                    values[p] *= value;
+                }
+            }
+
+            for (int i = 0; i<f2.getEvidence().size(); i++){
+                HashMap<String,String> row = f1.get(i);
+                Variable variable = f2.getEvidence().get(i);
+                String varName = variable.getName();
+                if (resemble(row,perm)){
+                    value = Double.parseDouble(row.get(varName));
+                    values[p] *= value;
+                }
+            }
+
+            String valStr = String.valueOf(values[p]);
+            perm.put("val", valStr);
+            newFactor.addRow(perm);
+        }
+        return newFactor;
+    }
+
+    public boolean resemble(HashMap<String,String> row, HashMap<String,String> perm){
+        boolean flag = true;
+        for (int v = 0; v < evidence.size(); v++) {  //evidence or hidden?
+            Variable currVar = evidence.get(v);
+            String name = currVar.getName();
+            if (perm.containsKey(name) && row.containsKey(name)){
+                if (!row.get(name).equals(perm.get(name))) {
+                    flag = false;
+                    break;
+                }
+            }
+        }
+        return flag;
+    }
+
+    public HashMap<String, String> get(int i) {
+        return factor.get(i);
+    }
+
+    public ArrayList<Variable> getEvidence() {
+        return evidence;
+    }
+
+    public ArrayList<Variable> getHidden() {
+        return hidden;
     }
 
     public void join() {
@@ -87,6 +181,71 @@ public class Factor {
     public void removeFactor() {
 
         //if there is 1 line
+    }
 
+    public int size() {
+        return factor.size();
+    }
+
+    public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
+
+        int numOfPerms = 1;
+        for (Variable variable : variables) {
+            numOfPerms *= variable.getOutcomes().size();
+        }
+
+        ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
+        int[] outcomesSizes = new int[variables.size()];
+        int varSize = variables.size();
+
+        for (int i = 0; i < varSize; i++) {
+            Variable curr = variables.get(i);
+            outcomesSizes[i] = curr.getOutcomes().size();
+        }
+
+        int m = outcomesSizes[0];
+        int temp = outcomesSizes[1];
+        outcomesSizes[1] = m;
+        m = temp;
+        outcomesSizes[0] = 0;
+
+        for (int i = 2; i < outcomesSizes.length; i++) {
+            m *= outcomesSizes[i];
+            outcomesSizes[i] = m;
+        }
+
+        String name;
+        String outcome;
+        int[] outcomes = new int[varSize];
+
+        for (int i = 0; i < numOfPerms; i++) {
+            HashMap<String, String> perm = new HashMap<>();
+            for (int j = 0; j < varSize; j++) {
+                Variable currVar = variables.get(j);
+                name = currVar.getName();
+                int numOfOutcomes = currVar.getOutcomes().size();
+                if (outcomes[j] >= numOfOutcomes) {
+                    outcomes[j] = 0;
+                }
+                outcome = currVar.getOutcomes().get(outcomes[j]);
+                if (j == 0) {
+                    outcomes[j]++;
+                } else {
+                    if ((i % outcomesSizes[j] == 0) && (i != 0)) {
+                        if (outcomes[j] + 1 >= numOfOutcomes) {
+                            outcomes[j] = 0;
+                        } else {
+                            outcomes[j]++;
+                        }
+                        outcome = currVar.getOutcomes().get(outcomes[j]);
+                    }
+                }
+                perm.put(name, outcome);
+            }
+            if (!permutations.contains(perm)) {
+                permutations.add(perm);
+            }
+        }
+        return permutations;
     }
 }

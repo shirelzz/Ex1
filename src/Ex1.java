@@ -9,6 +9,7 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) throws IOException, SAXException {
 
+
 ////        BayesianNetwork network = new BayesianNetwork();
 ////        XmlReader xmlReader = new XmlReader();
 ////        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
