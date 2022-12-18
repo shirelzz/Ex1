@@ -3,14 +3,14 @@ import java.util.HashMap;
 
 public class Factor {
 
-    private String name;
+    private ArrayList<String> name;
     private ArrayList<Variable> evidence;
     private ArrayList<Variable> hidden;
     private HashMap<String, String> variables;
     private ArrayList<HashMap<String, String>> factor;
     private HashMap<String, String> factorElem;
 
-    Factor(ArrayList<Variable> hidden, ArrayList<Variable> evidence, String name) {
+    Factor(ArrayList<Variable> hidden, ArrayList<Variable> evidence, ArrayList<String> name) {
         this.name = name;
         this.factor = new ArrayList<>();
         this.factorElem = new HashMap<>();
@@ -85,7 +85,8 @@ public class Factor {
     }
 
     public Factor sumOut(Variable variable) {
-        Factor newFactor = new Factor(this.hidden, this.evidence, "");
+        ArrayList<String> name = new ArrayList<>();
+        Factor newFactor = new Factor(this.hidden, this.evidence, name);
         double[] values = new double[factor.size()];
 
         for (int i = 0; i < factor.size(); i++) {
@@ -108,9 +109,10 @@ public class Factor {
         return newFactor;
     }
 
-    public void setName(String name){
+    public void setName(ArrayList<String> name){
         this.name = name;
     }
+
 
     public boolean resembling(HashMap<String, String> row, HashMap<String, String> currRow, Variable variable) {
         boolean flag = true;
@@ -128,7 +130,7 @@ public class Factor {
     }
 
     public Factor multiplyFactors(Factor f2) {
-        String newName = f2.name;
+        ArrayList<String> newName = f2.name;
 //        if (this.name.length() >= f2.getName().length()){
 //            newName = this.name;
 //        }
@@ -218,7 +220,7 @@ public class Factor {
         return factor.size();
     }
 
-    public String getName() {
+    public ArrayList<String> getName() {
         return this.name;
     }
 

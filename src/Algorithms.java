@@ -96,8 +96,6 @@ public class Algorithms {
 //        else if (algo == 3){
 //            ans = heuristicElimination(q);
 //        }
-        ans = formatAnswer(ans);
-        answer = ans;
     }
 
     public double varElm(Variable queryVar, HashMap<String,String> evidenceVars, int eliminationOrder){
@@ -107,19 +105,27 @@ public class Algorithms {
         ArrayList<Factor> factors = new ArrayList<>();
         for (int i = 0; i<variables.size(); i++){
             Variable variable = variables.get(i);
-            Factor factor = new Factor(hidden, evidence, variable.getName());
+            ArrayList<String> names = new ArrayList<>();
+            names.add(variable.getName());
+            Factor factor = new Factor(hidden, evidence, names);
+
             if (variable.hasParents()){
                 ArrayList<Variable> parents = variable.getParentNodes();
+                ArrayList<String> parentsNames = variable.getParents();
+
+                for (int n = 0; n< parentsNames.size(); n++){
+                    names.add(parentsNames.get(n));
+                }
+                factor.setName(names);
+
                 parents.add(variable); //add the child
                 ArrayList<HashMap<String,String>> perms = getPermsG(parents);
                 ArrayList<String> values = new ArrayList<>();
 
-                for (int p = 0; i < perms.size(); p++) {
+                for (int p = 0; p < perms.size(); p++) {
                     HashMap<String, String> currRow = perms.get(p);
-                    for (int k = 0; k<parents.size(); k++){
-
-                    }
-                    String val = String.valueOf(getProbFromCPT(variable, currRow.get(variable.getName()), currRow));
+                    double value = getProbFromCPT(variable, currRow.get(variable.getName()), currRow);
+                    String val = String.valueOf(value);
                     values.add(val);
                 }
 
@@ -129,7 +135,7 @@ public class Algorithms {
                 ArrayList<HashMap<String,String>> perm = new ArrayList<>();
                 for (int j = 0; j<variable.getOutcomes().size(); j++){
                     HashMap<String,String> row = new HashMap<>();
-                    String outcome = variable.getOutcomes().get(i);
+                    String outcome = variable.getOutcomes().get(j);
                     double value = getProbFromCPT(variable, outcome, evidenceVars);
                     String val = String.valueOf(value);
                     row.put(variable.getName(), outcome);
@@ -157,29 +163,41 @@ public class Algorithms {
 
         for (int i = 0; i<hidden.size(); i++){
             Variable hid = hidden.get(i);
-            String newName = hid.getName();
+            String hidName = hid.getName();
+            ArrayList<String> newName = new ArrayList<>();
+            newName.add(hidName);
+
             String outcome = evidenceVars.get(hid.getName());
             ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
             f_hid = order(f_hid, eliminationOrder);
 
             //multiply factors
-            Factor f0 = f_hid.get(0);
-            Factor f1 = f_hid.get(1);
-            Factor f2 = f0.multiplyFactors(f1);
-            f2.setName(newName);
-            hiddenFsAfterMulti.add(f2);
-            multiAct2++;
+            if (f_hid.size() > 2){
 
-            for (int j = 2; j<f_hid.size()-1; j++){
-                f1 = f_hid.get(j);
-                f2 = f2.multiplyFactors(f1);
+                Factor f0 = f_hid.get(0);
+                Factor f1 = f_hid.get(1);
+                Factor f2 = f0.multiplyFactors(f1);
+                f2.setName(newName);
                 hiddenFsAfterMulti.add(f2);
                 multiAct2++;
+
+                for (int j = 2; j<f_hid.size()-1; j++){
+                    f1 = f_hid.get(j);
+                    f2 = f2.multiplyFactors(f1);
+                    hiddenFsAfterMulti.add(f2);
+                    multiAct2++;
+                }
+
+                //sum out
+                f2.sumOut(hid);
+                sumOutHiddenFs.add(f2);
             }
 
-            //sum out
-            f2.sumOut(hid);
-            sumOutHiddenFs.add(f2);
+            else {
+                continue; //?
+            }
+
+
         }
 
         //multiply all remaining factors
@@ -190,8 +208,7 @@ public class Algorithms {
 
 
 
-
-
+        answer = ans;
         return ans;
     }
 
@@ -205,6 +222,85 @@ public class Algorithms {
             }
         }
         return factorsContVar;
+    }
+
+    public Factor[] sortFactors(ArrayList<Factor> factors) {
+
+        Factor [] sorted = new Factor[factors.size()];
+        ArrayList<Factor> sorted_factors = new ArrayList<>();
+        for (int i = 0; i < factors.size(); i++) {
+            sorted[i] = factors.get(i);
+        }
+
+        // using bubble sort algorithm
+        for (int i = 0; i < sorted.length; i++) {
+            for (int j = 0; j < sorted.length - 1; j++) {
+                if (CPTCompare(sorted[j], sorted[j+1])) {
+
+                    // swap factors
+                    Factor temp = sorted[j];
+                    sorted[j] = sorted[j+1];
+                    sorted[j + 1] = temp;
+
+                }
+            }
+        }
+        return sorted;
+    }
+
+    /**
+     * @param X first factor
+     * @param Y second factor
+     * @return true or false if we want to swap between X and Y
+     */
+    private static boolean CPTCompare(Factor X, Factor Y) {
+        if (X.size() < Y.size()) {
+            return false;
+        } else if (X.size() > Y.size()) {
+            return true;
+        } else {
+            // compare by ASCII values
+            List<String> X_names_list = getNames(X);
+            List<String> Y_names_list = getNames(Y);
+
+            int X_names_ascii = 0;
+            for (String name : X_names_list) {
+                for (int i = 0; i < name.length(); i++) {
+                    X_names_ascii += name.charAt(i);
+                }
+            }
+            int Y_names_ascii = 0;
+            for (String name : Y_names_list) {
+                for (int i = 0; i < name.length(); i++) {
+                    Y_names_ascii += name.charAt(i);
+                }
+            }
+            return X_names_ascii >= Y_names_ascii;
+        }
+    }
+
+    /**
+     * @param factor the given factor
+     * @return list of names of variables that the factor contains
+     */
+    public static List<String> getNames(Factor factor) {
+        ArrayList<String> names = new ArrayList<>();
+        names = factor.getName();
+        return names;
+    }
+
+    /**
+     * @param keys is a key string from a CPT table, for example: "A=T,B=F,C=v1"
+     * @return hashmap when the keys are the variables name ("A", "B", "C") and the values of them are the outcomes ("T", "F", "v1")
+     */
+    public static LinkedHashMap<String, String> splitKeysToVariablesAndOutcomes(String keys) {
+        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        String[] keys_split = keys.split(",");
+        for (String key : keys_split) {
+            String[] key_split = key.split("=");
+            result.put(key_split[0], key_split[1]);
+        }
+        return result;
     }
 
     public ArrayList<Factor> order(ArrayList<Factor> factors, int eliminationOrder) {
