@@ -108,6 +108,10 @@ public class Factor {
         return newFactor;
     }
 
+    public void setName(String name){
+        this.name = name;
+    }
+
     public boolean resembling(HashMap<String, String> row, HashMap<String, String> currRow, Variable variable) {
         boolean flag = true;
         for (int v = 0; v < evidence.size(); v++) {  //evidence or hidden?
@@ -124,13 +128,13 @@ public class Factor {
     }
 
     public Factor multiplyFactors(Factor f2) {
-        String newName;
-        if (this.name.length() >= f2.getName().length()){
-            newName = this.name;
-        }
-        else {
-            newName = f2.getName();
-        }
+        String newName = f2.name;
+//        if (this.name.length() >= f2.getName().length()){
+//            newName = this.name;
+//        }
+//        else {
+//            newName = f2.getName();
+//        }
 
         Factor newFactor = new Factor(hidden,evidence, newName);
         ArrayList<Variable> variables = new ArrayList<>(); //the variables of f1 and f2

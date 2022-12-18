@@ -152,8 +152,12 @@ public class Algorithms {
         }
 
         //eliminate hidden variables
+        ArrayList<Factor> hiddenFsAfterMulti = new ArrayList<>();
+        ArrayList<Factor> sumOutHiddenFs = new ArrayList<>();
+
         for (int i = 0; i<hidden.size(); i++){
             Variable hid = hidden.get(i);
+            String newName = hid.getName();
             String outcome = evidenceVars.get(hid.getName());
             ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
             f_hid = order(f_hid, eliminationOrder);
@@ -162,16 +166,20 @@ public class Algorithms {
             Factor f0 = f_hid.get(0);
             Factor f1 = f_hid.get(1);
             Factor f2 = f0.multiplyFactors(f1);
+            f2.setName(newName);
+            hiddenFsAfterMulti.add(f2);
             multiAct2++;
 
             for (int j = 2; j<f_hid.size()-1; j++){
                 f1 = f_hid.get(j);
                 f2 = f2.multiplyFactors(f1);
+                hiddenFsAfterMulti.add(f2);
                 multiAct2++;
             }
 
             //sum out
             f2.sumOut(hid);
+            sumOutHiddenFs.add(f2);
         }
 
         //multiply all remaining factors
