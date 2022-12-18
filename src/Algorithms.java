@@ -14,7 +14,6 @@ public class Algorithms {
     private BayesianNetwork network;
     private ArrayList<Variable> variables;
     private double alpha = 0;
-    private int numOfPerm = 1;
 //    private ArrayList<Factor> factors;
 //    private Hashtable factor;
 
@@ -98,30 +97,115 @@ public class Algorithms {
 
     public double varElm(Variable queryVar, HashMap<String,String> evidenceVars){
         double ans = 0;
-        ArrayList<Factor> factors = new ArrayList<>();
-        Factor factor = new Factor(hidden, evidence);
 
-        ArrayList<HashMap<String, String>> hiddenPerms = getPermsHid(numOfPerm);  //the perms on the hidden or evidence vars?
-        ArrayList<String> values = new ArrayList<>();
-        for (int i = 0; i<hiddenPerms.size(); i++){
-//            values.add();
+        //define factors
+        ArrayList<Factor> factors = new ArrayList<>();
+        for (int i = 0; i<variables.size(); i++){
+            Variable variable = variables.get(i);
+            Factor factor = new Factor(hidden, evidence, variable.getName());
+            if (variable.hasParents()){
+                ArrayList<Variable> parents = variable.getParentNodes();
+                parents.add(variable); //add the child
+                ArrayList<HashMap<String,String>> perms = getPermsG(parents);
+                ArrayList<String> values = new ArrayList<>();
+
+                for (int p = 0; i < perms.size(); p++) {
+                    HashMap<String, String> currRow = perms.get(p);
+                    for (int k = 0; k<parents.size(); k++){
+
+                    }
+                    String val = String.valueOf(getProbFromCPT(variable, currRow.get(variable.getName()), currRow));
+                    values.add(val);
+                }
+
+                factor.defFactor(perms,values);
+            }
+            else {
+                ArrayList<HashMap<String,String>> perm = new ArrayList<>();
+                for (int j = 0; j<variable.getOutcomes().size(); j++){
+                    HashMap<String,String> row = new HashMap<>();
+                    String outcome = variable.getOutcomes().get(i);
+                    double value = getProbFromCPT(variable, outcome, evidenceVars);
+                    String val = String.valueOf(value);
+                    row.put(variable.getName(), outcome);
+                    row.put("val", val);
+                    factor.addRow(row);
+                }
+            }
+            factors.add(factor);
         }
-        factor.defFactor(hiddenPerms, values);
+
+        //restrict factors
+        for (int i = 0; i<evidence.size(); i++){
+            Variable evi = evidence.get(i);
+            String outcome = evidenceVars.get(evi.getName());
+            ArrayList<Factor> f_evi = getFactorsConVar(factors, evi);
+            for (int j = 0; j<f_evi.size(); j++){
+                Factor factor = f_evi.get(j);
+                factor.restrictFactor(evi, outcome);
+            }
+        }
+
+        //eliminate hidden variables
+        for (int i = 0; i<hidden.size(); i++){
+            Variable hid = hidden.get(i);
+            String outcome = evidenceVars.get(hid.getName());
+            ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
+            f_hid = order(f_hid);
+
+            //multiply factors
+            Factor f0 = f_hid.get(0);
+            Factor f1 = f_hid.get(1);
+            Factor f2 = f0.multiplyFactors(f1);
+            multiAct2++;
+
+            for (int j = 2; j<f_hid.size()-1; j++){
+                f1 = f_hid.get(j);
+                f2 = f2.multiplyFactors(f1);
+                multiAct2++;
+            }
+
+            //sum out
+            f2.sumOut(hid);
+        }
+
+        //multiply all remaining factors
+
+
+        //normalize
+
+
+
+
 
 
         return ans;
     }
 
-    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
-        double ans = 0;
+    public ArrayList<Factor> getFactorsConVar(ArrayList<Factor> factors, Variable variable) {
+        ArrayList<Factor> factorsContVar = new ArrayList<>();
 
-        return ans;
+        for (int i = 0; i < factors.size(); i++) {
+            Factor currFactor = factors.get(i);
+            if (currFactor.contains(variable.getName())) {
+                factorsContVar.add(currFactor);
+            }
+        }
+        return factorsContVar;
+    }
+
+    public ArrayList<Factor> order(ArrayList<Factor> factors) {
+        ArrayList<Factor> ordered = new ArrayList<>();
+
+        return ordered;
     }
 
 
     //    public void heuristicElimination(){
     //
     //    }
+
+
 
 
     public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
@@ -132,7 +216,6 @@ public class Algorithms {
         for (Variable variable : hidden) {
             numOfPerms *= variable.getOutcomes().size();
         }
-        this.numOfPerm = numOfPerms;
 
         double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
         String orgQueryOutcome = evidenceVars.get(queryVar.getName());
@@ -227,14 +310,15 @@ public class Algorithms {
         return permutations;
     }
 
-    public ArrayList<HashMap<String, String>> getPermsG(int numOfPerms) {
+    public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
+
+        int numOfPerms = getNumOfPerms(variables);
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
-        int[] outcomesSizes = new int[evidence.size()];
-        int eviSize = evidence.size();
+        int[] outcomesSizes = new int[variables.size()];
 
-        for (int i = 0; i < eviSize; i++) {
-            Variable curr = evidence.get(i);
+        for (int i = 0; i < variables.size(); i++) {
+            Variable curr = variables.get(i);
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
@@ -251,18 +335,18 @@ public class Algorithms {
 
         String name;
         String outcome;
-        int[] outcomes = new int[eviSize];
+        int[] outcomes = new int[variables.size()];
 
         for (int i = 0; i < numOfPerms; i++) {
             HashMap<String, String> perm = new HashMap<>();
-            for (int j = 0; j < eviSize; j++) {
-                Variable currEvi = evidence.get(j);
-                name = currEvi.getName();
-                int numOfOutcomes = currEvi.getOutcomes().size();
+            for (int j = 0; j < variables.size(); j++) {
+                Variable currVar = variables.get(j);
+                name = currVar.getName();
+                int numOfOutcomes = currVar.getOutcomes().size();
                 if (outcomes[j] >= numOfOutcomes) {
                     outcomes[j] = 0;
                 }
-                outcome = currEvi.getOutcomes().get(outcomes[j]);
+                outcome = currVar.getOutcomes().get(outcomes[j]);
                 if (j == 0) {
                     outcomes[j]++;
                 } else {
@@ -272,7 +356,7 @@ public class Algorithms {
                         } else {
                             outcomes[j]++;
                         }
-                        outcome = currEvi.getOutcomes().get(outcomes[j]);
+                        outcome = currVar.getOutcomes().get(outcomes[j]);
                     }
                 }
                 perm.put(name, outcome);
@@ -495,8 +579,12 @@ public class Algorithms {
         return alpha;
     }
 
-    public double getPermsHid(){
-        return numOfPerm;
+    public int getNumOfPerms(ArrayList<Variable> variables){
+        int numOfPerms = 1;
+        for (Variable variable : variables) {
+            numOfPerms *= variable.getOutcomes().size();
+        }
+        return numOfPerms;
     }
 
 }

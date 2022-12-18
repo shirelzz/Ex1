@@ -190,8 +190,7 @@ public class Ex1 {
                         "Total number of multiplications = " + jd.getMultiplyActions1() + "\n" +
                         "hidden: " + jd.printHidden() + "\n" +
                         "evidence: " + jd.printEvidence() + "\n" +
-                        "alpha: = " + jd.getAlpha() + "\n" +
-                        "perms: = " + jd.getPermsHid() + "\n"
+                        "alpha: = " + jd.getAlpha() + "\n"
                 );
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination
