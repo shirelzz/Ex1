@@ -64,10 +64,15 @@ public class Algorithms {
                     answer = ans;
                 }
                 if (algo == 2) {
-                    ans = varElm(queryVar, evidenceVars);
+                    ans = varElm(queryVar, evidenceVars, 2);
                     ans = formatAnswer(ans);
                     answer = ans;
                 }
+//                if (algo == 3) {
+//                    ans = varElm(queryVar, evidenceVars, 3);
+//                    ans = formatAnswer(ans);
+//                    answer = ans;
+//                }
             }
         } else { //e.g. "P(B=T)"
             String newQ = q.substring(2, q.length() - 1); //e.g. "B=T"
@@ -95,7 +100,7 @@ public class Algorithms {
         answer = ans;
     }
 
-    public double varElm(Variable queryVar, HashMap<String,String> evidenceVars){
+    public double varElm(Variable queryVar, HashMap<String,String> evidenceVars, int eliminationOrder){
         double ans = 0;
 
         //define factors
@@ -151,7 +156,7 @@ public class Algorithms {
             Variable hid = hidden.get(i);
             String outcome = evidenceVars.get(hid.getName());
             ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
-            f_hid = order(f_hid);
+            f_hid = order(f_hid, eliminationOrder);
 
             //multiply factors
             Factor f0 = f_hid.get(0);
@@ -194,8 +199,16 @@ public class Algorithms {
         return factorsContVar;
     }
 
-    public ArrayList<Factor> order(ArrayList<Factor> factors) {
+    public ArrayList<Factor> order(ArrayList<Factor> factors, int eliminationOrder) {
         ArrayList<Factor> ordered = new ArrayList<>();
+
+        if (eliminationOrder == 2){ //by size
+
+        }
+
+        if (eliminationOrder == 3){ //heuristic
+
+        }
 
         return ordered;
     }
