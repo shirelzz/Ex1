@@ -10,6 +10,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class XmlReader {
 
@@ -219,7 +220,6 @@ public class XmlReader {
         }
         return network;
     }
-
 //    public void addAncestors(ArrayList<CptNode> network){
 //
 //        for (int i = 0; i<network.size(); i++){

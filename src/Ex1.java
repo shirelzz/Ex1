@@ -192,9 +192,7 @@ public class Ex1 {
                         "Total number of additions = " + jd.getAddActions1() + "\n" +
                         "Total number of multiplications = " + jd.getMultiplyActions1() + "\n" +
                         "hidden: " + jd.printHidden() + "\n" +
-                        "evidence: " + jd.printEvidence() + "\n" +
-                        "alpha: = " + jd.getAlpha() + "\n" +
-                        "perms: = " + jd.getPerms() + "\n"
+                        "evidence: " + jd.printEvidence() + "\n"
                 );
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination

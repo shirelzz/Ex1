@@ -66,8 +66,12 @@ public class Algorithms {
                     answer = ans;
                 }
                 if (algo == 2) {
-                    ans = eliminateBySize(q, evidenceVars);
+                    VariableElimination ve = new VariableElimination(evidence,hidden,variables,network, queryName_Outcome);
+                    ve.varElm(queryVar, evidenceVars, 2);
+                    ans = ve.getAnswer();
                     ans = formatAnswer(ans);
+                    this.multiAct2 = ve.getMul_Act();
+                    this.addAct2 = ve.getAdd_Act();
                     answer = ans;
                 }
             }
@@ -90,12 +94,11 @@ public class Algorithms {
             ans = formatAnswer(ans);
             answer = ans;
         }
-//        else if (algo == 3){
-//            ans = heuristicElimination(q);
-//        }
+
         ans = formatAnswer(ans);
         answer = ans;
     }
+
 
     public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans;
@@ -134,7 +137,7 @@ public class Algorithms {
         return ans;
     }
 
-    public double normalize(double res) { //see later how to normalize
+    public double normalize(double res) {
         double alpha = 0;
         if (res > 0) {
             alpha = 1 / res;
@@ -161,7 +164,7 @@ public class Algorithms {
         m = temp;
 
         for (int i = 2; i < outcomesSizes.length; i++) {
-            m *= outcomesSizes[i-1];
+            m *= outcomesSizes[i - 1];
             outcomeSizes_new[i] = m;
         }
 
@@ -198,12 +201,6 @@ public class Algorithms {
             }
         }
         return permutations;
-    }
-
-    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
-        double ans = 0;
-
-        return ans;
     }
 
     public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, Variable queryVar) {
@@ -415,14 +412,6 @@ public class Algorithms {
             print += cptNode.getName() + ", ";
         }
         return print;
-    }
-
-    public double getAlpha() {
-        return alpha;
-    }
-
-    public double getPerms() {
-        return numOfPerm;
     }
 
 }
