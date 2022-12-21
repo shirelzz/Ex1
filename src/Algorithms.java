@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -14,6 +15,7 @@ public class Algorithms {
     private BayesianNetwork network;
     private ArrayList<Variable> variables;
     private double alpha = 0;
+    private int numOfPerm = 1;
 //    private ArrayList<Factor> factors;
 //    private Hashtable factor;
 
@@ -64,15 +66,10 @@ public class Algorithms {
                     answer = ans;
                 }
                 if (algo == 2) {
-                    ans = varElm(queryVar, evidenceVars, 2);
+                    ans = eliminateBySize(q, evidenceVars);
                     ans = formatAnswer(ans);
                     answer = ans;
                 }
-//                if (algo == 3) {
-//                    ans = varElm(queryVar, evidenceVars, 3);
-//                    ans = formatAnswer(ans);
-//                    answer = ans;
-//                }
             }
         } else { //e.g. "P(B=T)"
             String newQ = q.substring(2, q.length() - 1); //e.g. "B=T"
@@ -96,234 +93,9 @@ public class Algorithms {
 //        else if (algo == 3){
 //            ans = heuristicElimination(q);
 //        }
-    }
-
-    public double varElm(Variable queryVar, HashMap<String,String> evidenceVars, int eliminationOrder){
-        double ans = 0;
-
-        //define factors
-        ArrayList<Factor> factors = new ArrayList<>();
-        for (int i = 0; i<variables.size(); i++){
-            Variable variable = variables.get(i);
-            ArrayList<String> names = new ArrayList<>();
-            names.add(variable.getName());
-            Factor factor = new Factor(hidden, evidence, names);
-
-            if (variable.hasParents()){
-                ArrayList<Variable> parents = variable.getParentNodes();
-                ArrayList<String> parentsNames = variable.getParents();
-
-                for (int n = 0; n< parentsNames.size(); n++){
-                    names.add(parentsNames.get(n));
-                }
-                factor.setName(names);
-
-                parents.add(variable); //add the child
-                ArrayList<HashMap<String,String>> perms = getPermsG(parents);
-                ArrayList<String> values = new ArrayList<>();
-
-                for (int p = 0; p < perms.size(); p++) {
-                    HashMap<String, String> currRow = perms.get(p);
-                    double value = getProbFromCPT(variable, currRow.get(variable.getName()), currRow);
-                    String val = String.valueOf(value);
-                    values.add(val);
-                }
-
-                factor.defFactor(perms,values);
-            }
-            else {
-                ArrayList<HashMap<String,String>> perm = new ArrayList<>();
-                for (int j = 0; j<variable.getOutcomes().size(); j++){
-                    HashMap<String,String> row = new HashMap<>();
-                    String outcome = variable.getOutcomes().get(j);
-                    double value = getProbFromCPT(variable, outcome, evidenceVars);
-                    String val = String.valueOf(value);
-                    row.put(variable.getName(), outcome);
-                    row.put("val", val);
-                    factor.addRow(row);
-                }
-            }
-            factors.add(factor);
-        }
-
-        //restrict factors
-        for (int i = 0; i<evidence.size(); i++){
-            Variable evi = evidence.get(i);
-            String outcome = evidenceVars.get(evi.getName());
-            ArrayList<Factor> f_evi = getFactorsConVar(factors, evi);
-            for (int j = 0; j<f_evi.size(); j++){
-                Factor factor = f_evi.get(j);
-                factor.restrictFactor(evi, outcome);
-            }
-        }
-
-        //eliminate hidden variables
-        ArrayList<Factor> hiddenFsAfterMulti = new ArrayList<>();
-        ArrayList<Factor> sumOutHiddenFs = new ArrayList<>();
-
-        for (int i = 0; i<hidden.size(); i++){
-            Variable hid = hidden.get(i);
-            String hidName = hid.getName();
-            ArrayList<String> newName = new ArrayList<>();
-            newName.add(hidName);
-
-            String outcome = evidenceVars.get(hid.getName());
-            ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
-            f_hid = order(f_hid, eliminationOrder);
-
-            //multiply factors
-            if (f_hid.size() > 2){
-
-                Factor f0 = f_hid.get(0);
-                Factor f1 = f_hid.get(1);
-                Factor f2 = f0.multiplyFactors(f1);
-                f2.setName(newName);
-                hiddenFsAfterMulti.add(f2);
-                multiAct2++;
-
-                for (int j = 2; j<f_hid.size()-1; j++){
-                    f1 = f_hid.get(j);
-                    f2 = f2.multiplyFactors(f1);
-                    hiddenFsAfterMulti.add(f2);
-                    multiAct2++;
-                }
-
-                //sum out
-                f2.sumOut(hid);
-                sumOutHiddenFs.add(f2);
-            }
-
-            else {
-                continue; //?
-            }
-
-
-        }
-
-        //multiply all remaining factors
-
-
-        //normalize
-
-
-
-
+        ans = formatAnswer(ans);
         answer = ans;
-        return ans;
     }
-
-    public ArrayList<Factor> getFactorsConVar(ArrayList<Factor> factors, Variable variable) {
-        ArrayList<Factor> factorsContVar = new ArrayList<>();
-
-        for (int i = 0; i < factors.size(); i++) {
-            Factor currFactor = factors.get(i);
-            if (currFactor.contains(variable.getName())) {
-                factorsContVar.add(currFactor);
-            }
-        }
-        return factorsContVar;
-    }
-
-    public Factor[] sortFactors(ArrayList<Factor> factors) {
-
-        Factor [] sorted = new Factor[factors.size()];
-        ArrayList<Factor> sorted_factors = new ArrayList<>();
-        for (int i = 0; i < factors.size(); i++) {
-            sorted[i] = factors.get(i);
-        }
-
-        // using bubble sort algorithm
-        for (int i = 0; i < sorted.length; i++) {
-            for (int j = 0; j < sorted.length - 1; j++) {
-                if (CPTCompare(sorted[j], sorted[j+1])) {
-
-                    // swap factors
-                    Factor temp = sorted[j];
-                    sorted[j] = sorted[j+1];
-                    sorted[j + 1] = temp;
-
-                }
-            }
-        }
-        return sorted;
-    }
-
-    /**
-     * @param X first factor
-     * @param Y second factor
-     * @return true or false if we want to swap between X and Y
-     */
-    private static boolean CPTCompare(Factor X, Factor Y) {
-        if (X.size() < Y.size()) {
-            return false;
-        } else if (X.size() > Y.size()) {
-            return true;
-        } else {
-            // compare by ASCII values
-            List<String> X_names_list = getNames(X);
-            List<String> Y_names_list = getNames(Y);
-
-            int X_names_ascii = 0;
-            for (String name : X_names_list) {
-                for (int i = 0; i < name.length(); i++) {
-                    X_names_ascii += name.charAt(i);
-                }
-            }
-            int Y_names_ascii = 0;
-            for (String name : Y_names_list) {
-                for (int i = 0; i < name.length(); i++) {
-                    Y_names_ascii += name.charAt(i);
-                }
-            }
-            return X_names_ascii >= Y_names_ascii;
-        }
-    }
-
-    /**
-     * @param factor the given factor
-     * @return list of names of variables that the factor contains
-     */
-    public static List<String> getNames(Factor factor) {
-        ArrayList<String> names = new ArrayList<>();
-        names = factor.getName();
-        return names;
-    }
-
-    /**
-     * @param keys is a key string from a CPT table, for example: "A=T,B=F,C=v1"
-     * @return hashmap when the keys are the variables name ("A", "B", "C") and the values of them are the outcomes ("T", "F", "v1")
-     */
-    public static LinkedHashMap<String, String> splitKeysToVariablesAndOutcomes(String keys) {
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        String[] keys_split = keys.split(",");
-        for (String key : keys_split) {
-            String[] key_split = key.split("=");
-            result.put(key_split[0], key_split[1]);
-        }
-        return result;
-    }
-
-    public ArrayList<Factor> order(ArrayList<Factor> factors, int eliminationOrder) {
-        ArrayList<Factor> ordered = new ArrayList<>();
-
-        if (eliminationOrder == 2){ //by size
-
-        }
-
-        if (eliminationOrder == 3){ //heuristic
-
-        }
-
-        return ordered;
-    }
-
-
-    //    public void heuristicElimination(){
-    //
-    //    }
-
-
-
 
     public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans;
@@ -333,6 +105,7 @@ public class Algorithms {
         for (Variable variable : hidden) {
             numOfPerms *= variable.getOutcomes().size();
         }
+        this.numOfPerm = numOfPerms;
 
         double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
         String orgQueryOutcome = evidenceVars.get(queryVar.getName());
@@ -346,10 +119,9 @@ public class Algorithms {
             HashMap<String, String> queryVarOutcome = new HashMap<>();
             queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
             queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
-            if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))){
+            if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))) {
                 denominatorAns += numeratorAns;
-            }
-            else{
+            } else {
                 denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
             }
             addAct1++;
@@ -370,7 +142,7 @@ public class Algorithms {
         return alpha;
     }
 
-    public ArrayList<HashMap<String, String>> getPermsHid(int numOfPerms) {
+    public ArrayList<HashMap<String, String>> getPerms(int numOfPerms) {
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
         int[] outcomesSizes = new int[hidden.size()];
@@ -381,15 +153,16 @@ public class Algorithms {
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
+        int[] outcomeSizes_new = new int[hiddenSize];
         int m = outcomesSizes[0];
-        int temp = outcomesSizes[1];
-        outcomesSizes[1] = m;
-        m = temp;
         outcomesSizes[0] = 0;
+        int temp = outcomesSizes[1];
+        outcomeSizes_new[1] = m;
+        m = temp;
 
         for (int i = 2; i < outcomesSizes.length; i++) {
-            m *= outcomesSizes[i];
-            outcomesSizes[i] = m;
+            m *= outcomesSizes[i-1];
+            outcomeSizes_new[i] = m;
         }
 
         String name;
@@ -409,7 +182,7 @@ public class Algorithms {
                 if (j == 0) {
                     outcomes[j]++;
                 } else {
-                    if ((i % outcomesSizes[j] == 0) && (i != 0)) {
+                    if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
                         if (outcomes[j] + 1 >= numOfOutcomes) {
                             outcomes[j] = 0;
                         } else {
@@ -427,62 +200,10 @@ public class Algorithms {
         return permutations;
     }
 
-    public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
+    public double eliminateBySize(String q, HashMap<String, String> evidenceVars) {
+        double ans = 0;
 
-        int numOfPerms = getNumOfPerms(variables);
-
-        ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
-        int[] outcomesSizes = new int[variables.size()];
-
-        for (int i = 0; i < variables.size(); i++) {
-            Variable curr = variables.get(i);
-            outcomesSizes[i] = curr.getOutcomes().size();
-        }
-
-        int m = outcomesSizes[0];
-        int temp = outcomesSizes[1];
-        outcomesSizes[1] = m;
-        m = temp;
-        outcomesSizes[0] = 0;
-
-        for (int i = 2; i < outcomesSizes.length; i++) {
-            m *= outcomesSizes[i];
-            outcomesSizes[i] = m;
-        }
-
-        String name;
-        String outcome;
-        int[] outcomes = new int[variables.size()];
-
-        for (int i = 0; i < numOfPerms; i++) {
-            HashMap<String, String> perm = new HashMap<>();
-            for (int j = 0; j < variables.size(); j++) {
-                Variable currVar = variables.get(j);
-                name = currVar.getName();
-                int numOfOutcomes = currVar.getOutcomes().size();
-                if (outcomes[j] >= numOfOutcomes) {
-                    outcomes[j] = 0;
-                }
-                outcome = currVar.getOutcomes().get(outcomes[j]);
-                if (j == 0) {
-                    outcomes[j]++;
-                } else {
-                    if ((i % outcomesSizes[j] == 0) && (i != 0)) {
-                        if (outcomes[j] + 1 >= numOfOutcomes) {
-                            outcomes[j] = 0;
-                        } else {
-                            outcomes[j]++;
-                        }
-                        outcome = currVar.getOutcomes().get(outcomes[j]);
-                    }
-                }
-                perm.put(name, outcome);
-            }
-            if (!permutations.contains(perm)) {
-                permutations.add(perm);
-            }
-        }
-        return permutations;
+        return ans;
     }
 
     public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, Variable queryVar) {
@@ -490,7 +211,7 @@ public class Algorithms {
 
         //Create an array list that contains all permutations on the *hidden* variables
         ArrayList<HashMap<String, String>> perms;
-        perms = getPermsHid(numOfPerms);
+        perms = getPerms(numOfPerms);
 
         //loop over all hidden permutations
         for (int i = 0; i < numOfPerms; i++) {
@@ -512,9 +233,9 @@ public class Algorithms {
             Variable curr = network.get(i);
             String currName = curr.getName();  //e.g J
             String currOutcome = currQuery.get(currName);  //e.g F
-            HashMap<String,String> newQuery = new HashMap<>();
+            HashMap<String, String> newQuery = new HashMap<>();
             newQuery.put(currName, currOutcome);   //e.g {J=F}
-            if (curr.hasParents()){
+            if (curr.hasParents()) {
                 ArrayList<String> currParents = curr.getParents();   //e.g J.parents = [A]
                 for (String parentName : currParents) {    //[A]
                     String parentOutcome = currQuery.get(parentName);  //T
@@ -596,6 +317,10 @@ public class Algorithms {
         }
         return flag;
     }
+
+    //    public void heuristicElimination(){
+    //
+    //    }
 
     public double formatAnswer(double ans) {
         double value = ans;
@@ -692,17 +417,12 @@ public class Algorithms {
         return print;
     }
 
-    public double getAlpha(){
+    public double getAlpha() {
         return alpha;
     }
 
-    public int getNumOfPerms(ArrayList<Variable> variables){
-        int numOfPerms = 1;
-        for (Variable variable : variables) {
-            numOfPerms *= variable.getOutcomes().size();
-        }
-        return numOfPerms;
+    public double getPerms() {
+        return numOfPerm;
     }
 
 }
-

@@ -9,7 +9,6 @@ import java.util.*;
 public class Ex1 {
     public static void main(String[] args) throws IOException, SAXException {
 
-
 ////        BayesianNetwork network = new BayesianNetwork();
 ////        XmlReader xmlReader = new XmlReader();
 ////        network = xmlReader.buildNet("/Users/syrlzkryh/Documents/GitHub/Ex1/src/big_net.xml");
@@ -184,13 +183,18 @@ public class Ex1 {
                 jd.addToEvidence(newQuery);
                 jd.runAlgo(1);
 
+                System.out.println("hid: " + jd.printHidden());
+                System.out.println("evi: " + jd.printEvidence());
+
+
                 output += jd.getAnswer() + "," + jd.getAddActions1() + "," + jd.getMultiplyActions1() + "\n";
                 System.out.println(query + ":" + "\n" + "Answer = " + jd.getAnswer() + "\n" +
                         "Total number of additions = " + jd.getAddActions1() + "\n" +
                         "Total number of multiplications = " + jd.getMultiplyActions1() + "\n" +
                         "hidden: " + jd.printHidden() + "\n" +
                         "evidence: " + jd.printEvidence() + "\n" +
-                        "alpha: = " + jd.getAlpha() + "\n"
+                        "alpha: = " + jd.getAlpha() + "\n" +
+                        "perms: = " + jd.getPerms() + "\n"
                 );
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination

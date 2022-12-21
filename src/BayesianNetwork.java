@@ -8,8 +8,8 @@ public class BayesianNetwork {
         this.network = new ArrayList<>();
     }
     
-    public void add(Variable cptNode){
-        network.add(cptNode);
+    public void add(Variable variable){
+        network.add(variable);
     }
 
     public int size(){
@@ -21,8 +21,8 @@ public class BayesianNetwork {
     }
 
     public void printNet(){
-        for (Variable cptNode : network) {
-            System.out.println(cptNode.printVariableDetails());
+        for (Variable variable : network) {
+            System.out.println(variable.printVariableDetails());
         }
     }
 

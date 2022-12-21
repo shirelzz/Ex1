@@ -10,6 +10,7 @@ public class Factor {
     private ArrayList<HashMap<String, String>> factor;
     private HashMap<String, String> factorElem;
 
+
     Factor(ArrayList<Variable> hidden, ArrayList<Variable> evidence, ArrayList<String> name) {
         this.name = name;
         this.factor = new ArrayList<>();
