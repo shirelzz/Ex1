@@ -50,7 +50,11 @@ public class Variable {
         return this.parents;
     }
 
-    public void addParentNode(Variable parent) { parentNodes.add(parent);}
+    public void addParentNode(Variable parent) {
+        if (!parent.getName().equals(this.name)) {
+            parentNodes.add(parent);
+        }
+    }
 
     public ArrayList<Variable> getParentNodes(){
         return this.parentNodes;

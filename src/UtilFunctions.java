@@ -2,14 +2,24 @@ import java.util.*;
 
 public class UtilFunctions {
 
+    public static Factor find(String main_name, ArrayList<Factor> factors){
+        for (Factor factor: factors){
+            if (factor.getMain_name().equals(main_name)){
+                return factor;
+            }
+        }
+        return null;
+    }
+
     public static double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
         double ans = 0;
         String outcome = "";
 
         if (queryVar.hasParents()) { //e.g. P(A=T|E=T,B=F)=?
+            Variable variable = queryVar;
             ArrayList<Variable> queryParents = queryVar.getParentNodes();
 
-            if (evidenceVars.size() - 1 == queryParents.size()) {
+            if (evidenceVars.size() -1  == queryParents.size()) {
                 int index = 0;
                 int outcomeIndex = 0;
 

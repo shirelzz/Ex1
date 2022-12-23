@@ -5,6 +5,7 @@ import java.util.List;
 public class Factor {
 
     private ArrayList<String> names;
+    private String main_name;
     private ArrayList<Variable> evidence;
     private ArrayList<Variable> hidden;
     private HashMap<String, String> variables;
@@ -20,11 +21,18 @@ public class Factor {
         this.hidden = hidden;
     }
 
-    public void defFactor(ArrayList<HashMap<String, String>> permutations, ArrayList<String> values) {
+    public Factor find(String main_name, ArrayList<Factor> factors){
+        for (Factor factor: factors){
+            if (factor.main_name.equals(main_name)){
+                return factor;
+            }
+        }
+        return null;
+    }
+
+    public void defFactor(ArrayList<HashMap<String, String>> permutations) {
         for (int i = 0; i < permutations.size(); i++) {
             HashMap<String, String> currRow = permutations.get(i);
-            String val = values.get(i); //how to get values??
-            currRow.put("val", val);
             factor.add(currRow);
         }
     }
@@ -49,14 +57,18 @@ public class Factor {
         factor.add(row);
     }
 
-    public void restrictFactor(Variable evidence, String val) {
+    public Factor restrictFactor(Variable evidence, String val, ArrayList<String> names) {
+        Factor factor_to_return = new Factor(this.hidden,this.evidence,names);
+        factor_to_return.setMain_name(evidence.getName());
+
         for (int i = 0; i < factor.size(); i++) {
             HashMap<String, String> currRow = factor.get(i);
-            if (!currRow.get(evidence.getName()).equals(val)) {
-                factor.remove(currRow);
+            if (currRow.get(evidence.getName()).equals(val)) {
+                currRow.remove(evidence.getName());
+                factor_to_return.addRow(currRow);
             }
         }
-
+        return factor_to_return;
     }
 
     public void normFactor() {
@@ -94,12 +106,15 @@ public class Factor {
     }
 
     public boolean contains(String varName) {
-        HashMap<String, String> currRow = factor.get(0);
-        if (currRow.containsKey(varName)) {
-            return true;
-        } else {
-            return false;
+        if (factor.size() > 0){
+            HashMap<String, String> currRow = factor.get(0);
+            if (currRow.containsKey(varName)) {
+                return true;
+            } else {
+                return false;
+            }
         }
+        return false;
     }
 
     public Factor sumOut(Variable variable) {
@@ -237,6 +252,14 @@ public class Factor {
 
     public int size() {
         return factor.size();
+    }
+
+    public void setMain_name(String name){
+        this.main_name = name;
+    }
+
+    public String getMain_name(){
+        return this.main_name;
     }
 
     public ArrayList<String> getNames() {
