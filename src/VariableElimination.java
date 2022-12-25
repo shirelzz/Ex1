@@ -15,21 +15,32 @@ public class VariableElimination {
     VariableElimination(ArrayList<Variable> evidence, ArrayList<Variable> hidden, ArrayList<Variable> variables, BayesianNetwork bn, String[] queryName_Outcome) {
         this.evidence = evidence;
         this.variables = variables;
-        this.hidden = hidden;
         this.network = bn;
+        this.hidden = sortByName(hidden);
         this.add_Act = 0;
         this.mul_Act = 0;
         this.queryName_Outcome = queryName_Outcome;
     }
 
+    public ArrayList<Variable> sortByName(ArrayList<Variable> list) {
+        ArrayList<String> names = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            names.add(list.get(i).getName());
+        }
+
+        Collections.sort(names);
+        list.removeAll(list);
+
+        for (String name : names) {
+            int index = network.find(name);
+            list.add(network.get(index));
+        }
+        return list;
+    }
+
     public double varElm(Variable queryVar, HashMap<String, String> evidenceVars, int eliminationOrder) {
 
-        double pre = 1;
-        for (Variable variable : evidence) {
-            if (!variable.hasParents() && evidenceVars.containsKey(variable.getName())) {
-                pre *= UtilFunctions.getProbFromCPT(variable, evidenceVars.get(variable.getName()), evidenceVars);
-            }
-        }
+        double pre;
 
         //define factors
         ArrayList<Factor> factors = new ArrayList<>();
@@ -63,7 +74,6 @@ public class VariableElimination {
                 factor.defFactor(perms);
 
             } else {
-                ArrayList<HashMap<String, String>> perm = new ArrayList<>();
                 for (int j = 0; j < variable.getOutcomes().size(); j++) {
                     HashMap<String, String> row = new HashMap<>();
                     String outcome = variable.getOutcomes().get(j);
@@ -80,76 +90,89 @@ public class VariableElimination {
         //restrict factors
         for (int i = 0; i < evidence.size(); i++) {
             Variable evi = evidence.get(i);
+            if (evi.getName().equals(queryVar.getName())) {
+                continue;
+            }
             String outcome = evidenceVars.get(evi.getName());
             ArrayList<Factor> f_evi = getFactorsConVar(factors, evi);
             for (int j = 0; j < f_evi.size(); j++) {
                 Factor factor = f_evi.get(j);
-                factors.add(factor.restrictFactor(evi, outcome, factor.getNames()));
-                Factor factor_to_remove = UtilFunctions.find(factor.getMain_name(), factors);
+                factor.getNames().remove(evi.getName());
+                Factor r = factor.restrictFactor(evi, outcome, factor.getNames());
+                if (r.size()>1){
+                    factors.add(r);
+                }
+                Factor factor_to_remove = UtilFunctions.find(factor.getNames(), factors);
                 factors.remove(factor_to_remove);
             }
         }
 
         //eliminate hidden variables
-        ArrayList<Factor> sumOutHiddenFs = new ArrayList<>();
-
         for (int i = 0; i < hidden.size(); i++) {
             Variable hid = hidden.get(i);
             String hidName = hid.getName();
 
-            ArrayList<String> outcomes = hid.getOutcomes();
             ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
             if (eliminationOrder == 2) {  //algo = 2 , second algorithm
                 if (f_hid.size() >= 2) {
                     Factor[] f_hidden = sortFactors(f_hid);
 
                     //multiply factors
-                    Factor factor_j = joinTwoFactors(f_hidden[0], f_hidden[1]);
-                    mul_Act++;
-                    factors.remove(f_hidden[0]);
-                    factors.remove(f_hidden[1]);
-//                    if (factor_j.size())
-                    factors.add(factor_j);
+                    for (int j = 0; j < f_hid.size()-1; j++) {
+                        Factor factor_1 = new Factor(f_hidden[j]);
+                        Factor factor_2 = new Factor(f_hidden[j+1]);
 
+                        Factor factor_n = joinTwoFactors(factor_1, factor_2);
+                        factors.remove(f_hidden[j]);
+                        factors.remove(f_hidden[j + 1]);
+                        f_hidden[j+1] = factor_n;
+//                        mul_Act++;
+                        ArrayList<String> names = new ArrayList<>();
+                        names.addAll(factor_1.getNames());
+                        names.addAll(factor_2.getNames());
+                        names = UtilFunctions.removeDuplicates(names);
+                        factor_n.setNames(names);
+                        factors.add(factor_n);
 
-                    if (f_hid.size() > 2) {
-                        for (int j = 2; j < f_hid.size() - 1; j++) {
-                            factor_j = joinTwoFactors(factor_j, f_hidden[j]);
-                            mul_Act++;
+//                            if (factor_n.size() <= 1) {
+//                                String name = factor_n.getNames().get(0);
+//                                Factor factor_to_remove = UtilFunctions.find(name, factors);
+//                                factors.remove(factor_to_remove);
+//                            }
 
-                            if (factor_j.size() == 0) {
-                                String name = factor_j.getNames().get(0);
-                                Factor factor_to_remove = UtilFunctions.find(name, factors);
-                                factors.remove(factor_to_remove);
-
-                            }
-
+                        if (j == f_hid.size() - 2) {
+                            //sum out
+                            factors.remove(factor_n);
+                            factor_n = factor_n.sumOut(hid);
+                            add_Act++;
+                            ArrayList<String> names_ = new ArrayList<>();
+                            names_.addAll(factor_1.getNames());
+                            names_.addAll(factor_2.getNames());
+                            names_ = UtilFunctions.removeDuplicates(names_);
+                            names_.remove(hidName);
+                            factor_n.setNames(names_);
+                            factors.add(factor_n);
                         }
                     }
 
-                    //sum out
-                    factor_j.setMain_name(hidName);
-                    factors.add(factor_j.sumOut(hid));  //?
-                    factors.remove(hidName);
 
-                    sumOutHiddenFs.add(factor_j);
+//                    for (int m = 0; m < factors.size(); m++) {
+//                        Factor curr = factors.get(m);
+//                        String m_name = curr.getMain_name();
+//                        for (int n = 0; n < sumOutHiddenFs.size(); n++) {
+//                            Factor curr_hid = sumOutHiddenFs.get(n);
+//
+//                            if (curr_hid.getMain_name().equals(curr.getMain_name())) {
+//                                factors.remove(m);
+//                                factors.add(curr_hid);
+//                            }
+//                        }
+//                    }
 
-                    for (int m = 0; m < factors.size(); m++) {
-                        Factor curr = factors.get(m);
-                        String m_name = curr.getMain_name();
-                        for (int n = 0; n < sumOutHiddenFs.size(); n++) {
-                            Factor curr_hid = sumOutHiddenFs.get(n);
-
-                            if (curr_hid.getMain_name().equals(curr.getMain_name())) {
-                                factors.remove(m);
-                                factors.add(curr_hid);
-                            }
-                        }
-                    }
-
+                } else {
+                    factors.remove(f_hid.get(0));
+                    factors.add(f_hid.get(0).sumOut(hid));
                 }
-            } else {
-                continue; //? 3rd algorithm
             }
 
 
@@ -172,7 +195,17 @@ public class VariableElimination {
             for (int l = 0; l < f.size(); l++) {
                 HashMap<String, String> line = f.get(l);
                 if (line.get(queryName_Outcome[0]).equals(queryName_Outcome[1])) {
-                    answer = pre * Double.parseDouble(line.get("val"));
+                    answer = Double.parseDouble(line.get("val"));
+                }
+            }
+        }
+        else {
+            Factor f = factors.get(0);
+            f.normFactor();
+            for (int l = 0; l < f.size(); l++) {
+                HashMap<String, String> line = f.get(l);
+                if (line.get(queryName_Outcome[0]).equals(queryName_Outcome[1])) {
+                    answer = Double.parseDouble(line.get("val"));
                 }
             }
         }
@@ -201,20 +234,24 @@ public class VariableElimination {
         }
 
         ArrayList<Variable> all_vars = new ArrayList<>();
-        for (int i = 0; i<X_names.size() + Y_names.size(); i++){
+        ArrayList<String> all_vars_names = new ArrayList<>();
+        for (int i = 0; i < X_names.size() + Y_names.size(); i++) {
             String name;
             Variable var;
-            if (i<X_names.size()){
+            if (i < X_names.size()) {
                 name = X_names.get(i);
+            } else {
+                name = Y_names.get(i - X_names.size());
             }
-            else {
-                name = Y_names.get(i-X_names.size());
+            if (!all_vars_names.contains(name)) {
+                all_vars_names.add(name);
             }
             var = network.get(network.find(name));
-            if (!all_vars.contains(var)){
+            if (!all_vars.contains(var)) {
                 all_vars.add(var);
             }
         }
+        result.setNames(all_vars_names);
 
         ArrayList<Variable> vars = new ArrayList<>();
         for (String name : X_Y_names_intersection) {
@@ -245,31 +282,24 @@ public class VariableElimination {
 //                }
 //            }
 //        }
-        if (vars.size() >= 1) {
+        if (all_vars.size() >= 1) {
             ArrayList<HashMap<String, String>> perms = getPermsG(all_vars);
             for (HashMap<String, String> perm : perms) {
                 for (int i = 0; i < X_Y_names_intersection.size(); i++) {
                     String name = X_Y_names_intersection.get(i);
                     perm.get(name);
-                    HashMap<String, String> x_line = X.getLine(perm, X_Y_names_intersection);
-                    HashMap<String, String> y_line = Y.getLine(perm, X_Y_names_intersection);
+                    HashMap<String, String> x_line = X.getLine(perm, X_names);
+                    HashMap<String, String> y_line = Y.getLine(perm, Y_names);
 
                     double u = Double.parseDouble(x_line.get("val"));
                     double v = Double.parseDouble(y_line.get("val"));
                     double r = u * v;
                     mul_Act++;
-                    perm.put(name, String.valueOf(r));
+                    perm.put("val", String.valueOf(r));
                     result.addRow(perm);
                 }
             }
         }
-
-        System.out.println("\nRESULT AFTER JOIN:");
-        for (int i = 0; i < result.size(); i++) {
-            System.out.println(result.get(i));
-        }
-        System.out.println();
-
         return result;
     }
 
@@ -289,48 +319,59 @@ public class VariableElimination {
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
-        int[] outcomeSizes_new = new int[varSize];
-        int m = outcomesSizes[0];
-        outcomesSizes[0] = 0;
-        int temp = outcomesSizes[1];
-        outcomeSizes_new[1] = m;
-        m = temp;
-
-        for (int i = 2; i < outcomesSizes.length; i++) {
-            m *= outcomesSizes[i - 1];
-            outcomeSizes_new[i] = m;
-        }
-
-        String name;
-        String outcome;
-        int[] outcomes = new int[varSize];
-
-        for (int i = 0; i < numOfPerms; i++) {
-            HashMap<String, String> perm = new HashMap<>();
-            for (int j = 0; j < varSize; j++) {
-                Variable currVar = variables.get(j);
-                name = currVar.getName();
-                int numOfOutcomes = currVar.getOutcomes().size();
-                if (outcomes[j] >= numOfOutcomes) {
-                    outcomes[j] = 0;
-                }
-                outcome = currVar.getOutcomes().get(outcomes[j]);
-                if (j == 0) {
-                    outcomes[j]++;
-                } else {
-                    if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
-                        if (outcomes[j] + 1 >= numOfOutcomes) {
-                            outcomes[j] = 0;
-                        } else {
-                            outcomes[j]++;
-                        }
-                        outcome = currVar.getOutcomes().get(outcomes[j]);
-                    }
-                }
+        if (variables.size() == 1) {
+            ArrayList<String> outcomes = variables.get(0).getOutcomes();
+            String name = variables.get(0).getName();
+            for (String outcome : outcomes) {
+                HashMap<String, String> perm = new HashMap<>();
                 perm.put(name, outcome);
-            }
-            if (!permutations.contains(perm)) {
                 permutations.add(perm);
+            }
+        } else {
+
+            int[] outcomeSizes_new = new int[varSize];
+            int m = outcomesSizes[0];
+            outcomesSizes[0] = 0;
+            int temp = outcomesSizes[1];
+            outcomeSizes_new[1] = m;
+            m = temp;
+
+            for (int i = 2; i < outcomesSizes.length; i++) {
+                m *= outcomesSizes[i - 1];
+                outcomeSizes_new[i] = m;
+            }
+
+            String name;
+            String outcome;
+            int[] outcomes = new int[varSize];
+
+            for (int i = 0; i < numOfPerms; i++) {
+                HashMap<String, String> perm = new HashMap<>();
+                for (int j = 0; j < varSize; j++) {
+                    Variable currVar = variables.get(j);
+                    name = currVar.getName();
+                    int numOfOutcomes = currVar.getOutcomes().size();
+                    if (outcomes[j] >= numOfOutcomes) {
+                        outcomes[j] = 0;
+                    }
+                    outcome = currVar.getOutcomes().get(outcomes[j]);
+                    if (j == 0) {
+                        outcomes[j]++;
+                    } else {
+                        if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
+                            if (outcomes[j] + 1 >= numOfOutcomes) {
+                                outcomes[j] = 0;
+                            } else {
+                                outcomes[j]++;
+                            }
+                            outcome = currVar.getOutcomes().get(outcomes[j]);
+                        }
+                    }
+                    perm.put(name, outcome);
+                }
+                if (!permutations.contains(perm)) {
+                    permutations.add(perm);
+                }
             }
         }
         return permutations;

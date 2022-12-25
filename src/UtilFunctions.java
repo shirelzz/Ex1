@@ -1,14 +1,31 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 public class UtilFunctions {
 
-    public static Factor find(String main_name, ArrayList<Factor> factors){
+    public static Factor find(ArrayList<String> names, ArrayList<Factor> factors){
         for (Factor factor: factors){
-            if (factor.getMain_name().equals(main_name)){
+            if (factor.getNames().equals(names)){
                 return factor;
             }
         }
+
         return null;
+    }
+
+    public static ArrayList<String> removeDuplicates(ArrayList<String> list){
+        ArrayList<String> new_list = new ArrayList<>();
+        for (int i = 0; i<list.size(); i++){
+            String str = list.get(i);
+            if (i==0){
+                new_list.add(str);
+            }
+            else if (!new_list.contains(str)){
+                new_list.add(str);
+            }
+        }
+        return new_list;
     }
 
     public static double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
@@ -123,6 +140,12 @@ public class UtilFunctions {
 
     public static List<String> separateByCommas(String string) {
         return new ArrayList<>(Arrays.asList(string.split(",")));
+    }
+
+    public static double roundFiveDecimalPlaces(double d) {
+        BigDecimal bigDecimal = new BigDecimal(Double.toString(d));
+        bigDecimal = bigDecimal.setScale(5, RoundingMode.HALF_UP);
+        return bigDecimal.doubleValue();
     }
 
 }
