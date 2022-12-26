@@ -4,6 +4,12 @@ import java.util.*;
 
 public class UtilFunctions {
 
+    /**
+     *
+     * @param names list of strings
+     * @param factors list of factors
+     * @return the factor with the same name list as names
+     */
     public static Factor find(ArrayList<String> names, ArrayList<Factor> factors){
         for (Factor factor: factors){
             if (factor.getNames().equals(names)){
@@ -14,6 +20,11 @@ public class UtilFunctions {
         return null;
     }
 
+    /**
+     *
+     * @param list list of strings
+     * @return the list without the duplicates
+     */
     public static ArrayList<String> removeDuplicates(ArrayList<String> list){
         ArrayList<String> new_list = new ArrayList<>();
         for (int i = 0; i<list.size(); i++){
@@ -28,6 +39,13 @@ public class UtilFunctions {
         return new_list;
     }
 
+    /**
+     *
+     * @param queryVar the query variable
+     * @param queryRequestedOutcome the outcome of the query variable
+     * @param evidenceVars all the variables in the query
+     * @return the answer to the query
+     */
     public static double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
         double ans = 0;
         String outcome = "";
@@ -81,34 +99,6 @@ public class UtilFunctions {
         return ans;
     }
 
-
-    /**
-     * @param keys is a key string from a CPT table, for example: "A=T,B=F,C=v1"
-     * @return hashmap when the keys are the variables name ("A", "B", "C") and the values of them are the outcomes ("T", "F", "v1")
-     */
-    public static LinkedHashMap<String, String> splitKeysToVariablesAndOutcomes(String keys) {
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        String[] keys_split = keys.split(",");
-        for (String key : keys_split) {
-            String[] key_split = key.split("=");
-            result.put(key_split[0], key_split[1]);
-        }
-        return result;
-    }
-
-    /**
-     * @param X   list of elements
-     * @param Y   list of elements
-     * @param <T> some value that X and Y are fill with
-     * @return union of X and Y lists
-     */
-    public static <T> List<T> union(List<T> X, List<T> Y) {
-        Set<T> result = new HashSet<>();
-        result.addAll(X);
-        result.addAll(Y);
-        return new ArrayList<>(result);
-    }
-
     /**
      * @param X   list of elements
      * @param Y   list of elements
@@ -122,24 +112,6 @@ public class UtilFunctions {
         else if (Y.isEmpty()) return X;
         else for (T x : X) if (Y.contains(x)) result.add(x);
         return result;
-    }
-
-    /**
-     * @param list of strings
-     * @return string of the list strings seperated by commas
-     */
-    public static String combineWithCommas(List<String> list) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            result.append(list.get(i));
-            if (i != list.size() - 1) result.append(",");
-        }
-        return result.toString();
-    }
-
-
-    public static List<String> separateByCommas(String string) {
-        return new ArrayList<>(Arrays.asList(string.split(",")));
     }
 
     public static double roundFiveDecimalPlaces(double d) {

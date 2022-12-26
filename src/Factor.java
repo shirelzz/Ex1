@@ -8,10 +8,15 @@ public class Factor {
     private String main_name;
     private ArrayList<Variable> evidence;
     private ArrayList<Variable> hidden;
-    //    private HashMap<String, String> variables;
     private ArrayList<HashMap<String, String>> factor;
 
 
+    /**
+     * constructor
+     * @param hidden list of the hidden variables
+     * @param evidence list of the evidence variables
+     * @param name list of the names of the variables in this factor
+     */
     Factor(ArrayList<Variable> hidden, ArrayList<Variable> evidence, ArrayList<String> name) {
         this.names = name;
         this.factor = new ArrayList<>();
@@ -19,6 +24,10 @@ public class Factor {
         this.hidden = hidden;
     }
 
+    /**
+     * constructor
+     * @param f factor to be copied from
+     */
     Factor(Factor f) {
         this.names = f.names;
         this.factor = f.factor;
@@ -26,15 +35,10 @@ public class Factor {
         this.hidden = f.hidden;
     }
 
-    public Factor find(String main_name, ArrayList<Factor> factors) {
-        for (Factor factor : factors) {
-            if (factor.main_name.equals(main_name)) {
-                return factor;
-            }
-        }
-        return null;
-    }
-
+    /**
+     *  define factor
+     * @param permutations all the permutations of the variables in this factor
+     */
     public void defFactor(ArrayList<HashMap<String, String>> permutations) {
         for (int i = 0; i < permutations.size(); i++) {
             HashMap<String, String> currRow = permutations.get(i);
@@ -42,6 +46,12 @@ public class Factor {
         }
     }
 
+    /**
+     * get a specific line of the factor
+     * @param line line
+     * @param names list of names in this line
+     * @return the row in the factor equals to this line
+     */
     public HashMap<String, String> getLine(HashMap<String, String> line, List<String> names) {
         for (int i = 0; i < factor.size(); i++) {
             HashMap<String, String> row = factor.get(i);
@@ -58,10 +68,21 @@ public class Factor {
         return null;
     }
 
+    /**
+     * add a row to the factor
+     * @param row the row we want to add
+     */
     public void addRow(HashMap<String, String> row) {
         factor.add(row);
     }
 
+    /**
+     * remove all the rows in the factor that are irrelevant to the query
+     * @param evidence the evidence variable
+     * @param val the known outcome of the evidencce variable
+     * @param names the names of the variables in this factor
+     * @return a factor without the rows that are irrelevant
+     */
     public Factor restrictFactor(Variable evidence, String val, ArrayList<String> names) {
         Factor f = new Factor(this);
         Factor factor_to_return = new Factor(this.hidden, this.evidence, names);
@@ -78,6 +99,9 @@ public class Factor {
         return factor_to_return;
     }
 
+    /**
+     * normalizes the factor
+     */
     public void normFactor() {
         double sum = 0;
         double alpha = 0;
@@ -99,19 +123,11 @@ public class Factor {
         }
     }
 
-    //get all the factors containing a specific variable
-    public ArrayList<Factor> getFactorsConVar(ArrayList<Factor> factors, Variable variable) {
-        ArrayList<Factor> factorsContVar = new ArrayList<>();
-
-        for (int i = 0; i < factors.size(); i++) {
-            Factor currFactor = factors.get(i);
-            if (currFactor.contains(variable.getName())) {
-                factorsContVar.add(currFactor);
-            }
-        }
-        return factorsContVar;
-    }
-
+    /**
+     * checks if the factor contains a specific variable
+     * @param varName the name of the variable
+     * @return true if the factor contains the variable or false if it doesn't
+     */
     public boolean contains(String varName) {
         if (factor.size() > 0) {
             HashMap<String, String> currRow = factor.get(0);
@@ -124,6 +140,11 @@ public class Factor {
         return false;
     }
 
+    /**
+     * sum out a (hidden) variable from the factor
+     * @param variable the variable we want to sum out
+     * @return a factor without that variable
+     */
     public Factor sumOut(Variable variable) {
         ArrayList<String> name = new ArrayList<>();
         Factor newFactor = new Factor(this.hidden, this.evidence, name);
@@ -177,9 +198,14 @@ public class Factor {
         return newFactor;
     }
 
-    private boolean containsPerm(HashMap<String, String> row_to_add) {
-        String val = row_to_add.get("val");
-        row_to_add.remove("val");
+    /**
+     * checks if this factor contains this line (except for the "val" key of each row)
+     * @param line the line to be searched for in this factor
+     * @return true if the factor contains this line or false if ot doesn't
+     */
+    public boolean containsPerm(HashMap<String, String> line) {
+        String val = line.get("val");
+        line.remove("val");
         boolean flag = false;
         if (factor.size() == 0) {
             flag = false;
@@ -188,30 +214,39 @@ public class Factor {
                 HashMap<String, String> row = factor.get(i);
                 String val_ = row.get("val");
                 row.remove("val");
-                if (row.equals(row_to_add)) {
+                if (row.equals(line)) {
                     flag = true;
                     row.put("val", val_);
-                    row_to_add.put("val", val);
+                    line.put("val", val);
                     break;
                 }
                 row.put("val", val_);
             }
         }
-        row_to_add.put("val", val);
+        line.put("val", val);
         return flag;
     }
 
+    /**
+     * set factor names
+     * @param names all the names of the variables that are in this factor
+     */
     public void setNames(ArrayList<String> names) {
         this.names = names;
     }
 
-    public boolean resembling(HashMap<String, String> row, HashMap<String, String> currRow, Variable variable) {
+    /**
+     * checks if two lines are similar except for a specific variable key
+     * @param variable the variable that its value is irrelevant to us
+     * @return true if there's a resemblance or false if there isn't
+     */
+    public boolean resembling(HashMap<String, String> row, HashMap<String, String> line, Variable variable) {
         boolean flag = true;
         for (int i = 0; i < this.names.size(); i++) {
             String name = names.get(i);
             if (name.equals(variable.getName())) {
                 continue;
-            } else if (!row.get(name).equals(currRow.get(name))) {
+            } else if (!row.get(name).equals(line.get(name))) {
                 flag = false;
                 break;
             }
@@ -219,33 +254,18 @@ public class Factor {
         return flag;
     }
 
-    public boolean resemble(HashMap<String, String> row, HashMap<String, String> perm) {
-        boolean flag = true;
-        for (int v = 0; v < evidence.size(); v++) {  //evidence or hidden?
-            Variable currVar = evidence.get(v);
-            String name = currVar.getName();
-            if (perm.containsKey(name) && row.containsKey(name)) {
-                if (!row.get(name).equals(perm.get(name))) {
-                    flag = false;
-                    break;
-                }
-            }
-        }
-        return flag;
-    }
-
+    /**
+     * get to a specific line in this factor
+     * @param i the index of this line
+     * @return the line
+     */
     public HashMap<String, String> get(int i) {
         return factor.get(i);
     }
 
-    public ArrayList<Variable> getEvidence() {
-        return evidence;
-    }
-
-    public ArrayList<Variable> getHidden() {
-        return hidden;
-    }
-
+    /**
+     * @return number of lines in this factor
+     */
     public int size() {
         return factor.size();
     }
@@ -254,17 +274,17 @@ public class Factor {
         this.main_name = name;
     }
 
-    public String getMain_name() {
-        return this.main_name;
-    }
-
+    /**
+     * @return the names of the variables that are in this factor
+     */
     public ArrayList<String> getNames() {
         return this.names;
     }
 
     /**
      * @param bn network
-     * @return hashmap when the keys are the name of the variables that are in the factor and the values are the outcomes of those variables
+     * @return hashmap when the keys are the name of the variables that are in the factor
+     * and the values are the outcomes of those variables
      */
     public HashMap<String, List<String>> getNamesAndOutcomes(BayesianNetwork bn) {
         HashMap<String, List<String>> names_outcomes = new HashMap<>();
@@ -277,10 +297,6 @@ public class Factor {
             names_outcomes.put(name, outcomes);
         }
         return names_outcomes;
-    }
-
-    public boolean isEmpty() {
-        return this.factor.size() > 1;
     }
 
 }
