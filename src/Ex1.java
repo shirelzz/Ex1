@@ -150,10 +150,7 @@ public class Ex1 {
 
             while (myReader.hasNextLine()) {
                 questions.add(myReader.nextLine());
-//                queries = myReader.nextLine();
-//                System.out.println(queries);
             }
-//            System.out.println(questions);
 
             System.out.println("");
             myReader.close();
@@ -193,8 +190,7 @@ public class Ex1 {
                         "Total number of additions = " + ve1.getAddActions2() + "\n" +
                         "Total number of multiplications = " + ve1.getMultiplyActions2() + "\n");
             }
-
-            else if (algoWanted == 3) {  //2nd algorithm: Variable elimination
+            else {
                 Algorithms ve2 = new Algorithms(newQuery, network);
                 ve2.runAlgo(3);
 
@@ -202,6 +198,7 @@ public class Ex1 {
                 System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
                         "Total number of additions = " + ve2.getAddActions2() + "\n" +
                         "Total number of multiplications = " + ve2.getMultiplyActions2() + "\n");
+
             }
 
         }

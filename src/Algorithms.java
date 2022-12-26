@@ -74,7 +74,7 @@ public class Algorithms {
                     answer = ans;
 
                 }
-                if (algo == 2 || algo == 3) {
+                if (algo == 2) {
                     VariableElimination ve = new VariableElimination(evidence, hidden, variables, network, queryName_Outcome);
                     ve.varElm(queryVar, evidenceVars, 2);
                     ans = ve.getAnswer();
