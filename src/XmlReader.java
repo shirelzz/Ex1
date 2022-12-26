@@ -19,14 +19,14 @@ public class XmlReader {
         this.network = new BayesianNetwork();
     }
 
-    public BayesianNetwork buildNet(String path) {
+    public BayesianNetwork buildNet(String file_name) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
 
         {
             try {
                 builder = factory.newDocumentBuilder();
-                File xmlFile = new File(path);
+                File xmlFile = new File(file_name);
                 Document document = builder.parse(xmlFile);
                 document.getDocumentElement().normalize();
 
