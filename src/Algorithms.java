@@ -17,7 +17,8 @@ public class Algorithms {
 
     /**
      * constructor
-     * @param query the query string as shown in the input file
+     *
+     * @param query   the query string as shown in the input file
      * @param network the BN for the given variables
      */
     Algorithms(String query, BayesianNetwork network) {
@@ -36,6 +37,7 @@ public class Algorithms {
 
     /**
      * runs the algorithms
+     *
      * @param algo the number of the algorithm required in the input file
      */
     public void runAlgo(int algo) {
@@ -44,7 +46,9 @@ public class Algorithms {
         if (q.contains("|")) {                //e.g. "P(B=T|J=T,M=T)"
             String numeratorStr = q.replace("|", ",");       //"P(B=T,J=T,M=T)"
             numeratorStr = numeratorStr.substring(2, numeratorStr.length() - 1); //"B=T,J=T,M=T"
-            String[] numerator = numeratorStr.split(",");                //["B=T","J=T","M=T"]
+            String[] numerator = numeratorStr.split(",");                 //["B=T","J=T","M=T"]
+            addToEvidence(numerator);
+            addToHidden();
             String[] queryName_Outcome = numerator[0].split("=");       //e.g. [B,T]
             String queryVarName = queryName_Outcome[0];                      //e.g. "B"
             String queryRequestedOutcome = queryName_Outcome[1];             //e.g. "T"
@@ -68,9 +72,10 @@ public class Algorithms {
                     ans = jointProb(queryVar, evidenceVars);
                     ans = formatAnswer(ans);
                     answer = ans;
+
                 }
                 if (algo == 2 || algo == 3) {
-                    VariableElimination ve = new VariableElimination(evidence,hidden,variables,network, queryName_Outcome);
+                    VariableElimination ve = new VariableElimination(evidence, hidden, variables, network, queryName_Outcome);
                     ve.varElm(queryVar, evidenceVars, 2);
                     ans = ve.getAnswer();
                     ans = formatAnswer(ans);
@@ -103,10 +108,17 @@ public class Algorithms {
         answer = ans;
     }
 
+    private double calc(HashMap<String, String> evidenceVars) {
+        double res = 0;
+
+        return res;
+    }
+
 
     /**
      * The first algorithm
-     * @param queryVar the query variable
+     *
+     * @param queryVar     the query variable
      * @param evidenceVars all the variables in this query
      * @return the probability of this query
      */
@@ -120,31 +132,31 @@ public class Algorithms {
         }
 
         double numeratorAns = calcProb(numOfPerms, evidenceVars);
-        String orgQueryOutcome = evidenceVars.get(queryVar.getName());
-        double denominatorAns = 0;
 
+            String orgQueryOutcome = evidenceVars.get(queryVar.getName());
+            double denominatorAns = 0;
 
-        //For the denominator we will sum all possible outcomes of the query variable
-        for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
-            HashMap<String, String> queryVarOutcome = new HashMap<>();
-            queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
-            queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
-            if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))) {
-                denominatorAns += numeratorAns;
-            } else {
-                denominatorAns += calcProb(numOfPerms, queryVarOutcome);
+            //For the denominator we will sum all possible outcomes of the query variable
+            for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
+                HashMap<String, String> queryVarOutcome = new HashMap<>();
+                queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
+                queryVarOutcome.put(queryVar.getName(), queryVar.getOutcomes().get(i)); //set different outcome to the query variable
+                if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))) {
+                    denominatorAns += numeratorAns;
+                } else {
+                    denominatorAns += calcProb(numOfPerms, queryVarOutcome);
+                }
+                addAct1++;
             }
-            addAct1++;
-        }
-        addAct1--; //first addition does not count
-        double alpha = normalize(denominatorAns);
-        ans = alpha * numeratorAns;
-        ans = formatAnswer(ans);
+            addAct1--; //first addition does not count
+            double alpha = normalize(denominatorAns);
+            ans = alpha * numeratorAns;
+            ans = formatAnswer(ans);
+
         return ans;
     }
 
     /**
-     *
      * @param res the result probability
      * @return normalized result
      */
@@ -157,76 +169,80 @@ public class Algorithms {
     }
 
     /**
-     *
      * @param variables a list of variables
      * @return a list of all the permutations on this variables
      */
     public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
 
-        int numOfPerms = 1;
-        for (Variable variable : variables) {
-            numOfPerms *= variable.getOutcomes().size();
-        }
-
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
-        int[] outcomesSizes = new int[variables.size()];
-        int varSize = variables.size();
-
-        for (int i = 0; i < varSize; i++) {
-            Variable curr = variables.get(i);
-            outcomesSizes[i] = curr.getOutcomes().size();
-        }
-
-        if (variables.size() == 1) {
-            ArrayList<String> outcomes = variables.get(0).getOutcomes();
-            String name = variables.get(0).getName();
-            for (String outcome : outcomes) {
-                HashMap<String, String> perm = new HashMap<>();
-                perm.put(name, outcome);
-                permutations.add(perm);
-            }
+        if (variables.size() == 0) {
+            return permutations;
         } else {
 
-            int[] outcomeSizes_new = new int[varSize];
-            int m = outcomesSizes[0];
-            outcomeSizes_new[0] = 0;
-            outcomeSizes_new[1] = outcomesSizes[0];
-
-            for (int i = 2; i < outcomesSizes.length; i++) {
-                m *= outcomesSizes[i - 1];
-                outcomeSizes_new[i] = m;
+            int numOfPerms = 1;
+            for (Variable variable : variables) {
+                numOfPerms *= variable.getOutcomes().size();
             }
 
-            String name;
-            String outcome;
-            int[] outcomes = new int[varSize];
+            int[] outcomesSizes = new int[variables.size()];
+            int varSize = variables.size();
 
-            for (int i = 0; i < numOfPerms; i++) {
-                HashMap<String, String> perm = new HashMap<>();
-                for (int j = 0; j < varSize; j++) {
-                    Variable currVar = variables.get(j);
-                    name = currVar.getName();
-                    int numOfOutcomes = currVar.getOutcomes().size();
-                    if (outcomes[j] >= numOfOutcomes) {
-                        outcomes[j] = 0;
-                    }
-                    outcome = currVar.getOutcomes().get(outcomes[j]);
-                    if (j == 0) {
-                        outcomes[j]++;
-                    } else {
-                        if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
-                            if (outcomes[j] + 1 >= numOfOutcomes) {
-                                outcomes[j] = 0;
-                            } else {
-                                outcomes[j]++;
-                            }
-                            outcome = currVar.getOutcomes().get(outcomes[j]);
-                        }
-                    }
+            for (int i = 0; i < varSize; i++) {
+                Variable curr = variables.get(i);
+                outcomesSizes[i] = curr.getOutcomes().size();
+            }
+
+            if (variables.size() == 1) {
+                ArrayList<String> outcomes = variables.get(0).getOutcomes();
+                String name = variables.get(0).getName();
+                for (String outcome : outcomes) {
+                    HashMap<String, String> perm = new HashMap<>();
                     perm.put(name, outcome);
-                }
-                if (!permutations.contains(perm)) {
                     permutations.add(perm);
+                }
+            } else {
+
+                int[] outcomeSizes_new = new int[varSize];
+                int m = outcomesSizes[0];
+                outcomeSizes_new[0] = 0;
+                outcomeSizes_new[1] = outcomesSizes[0];
+
+                for (int i = 2; i < outcomesSizes.length; i++) {
+                    m *= outcomesSizes[i - 1];
+                    outcomeSizes_new[i] = m;
+                }
+
+                String name;
+                String outcome;
+                int[] outcomes = new int[varSize];
+
+                for (int i = 0; i < numOfPerms; i++) {
+                    HashMap<String, String> perm = new HashMap<>();
+                    for (int j = 0; j < varSize; j++) {
+                        Variable currVar = variables.get(j);
+                        name = currVar.getName();
+                        int numOfOutcomes = currVar.getOutcomes().size();
+                        if (outcomes[j] >= numOfOutcomes) {
+                            outcomes[j] = 0;
+                        }
+                        outcome = currVar.getOutcomes().get(outcomes[j]);
+                        if (j == 0) {
+                            outcomes[j]++;
+                        } else {
+                            if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
+                                if (outcomes[j] + 1 >= numOfOutcomes) {
+                                    outcomes[j] = 0;
+                                } else {
+                                    outcomes[j]++;
+                                }
+                                outcome = currVar.getOutcomes().get(outcomes[j]);
+                            }
+                        }
+                        perm.put(name, outcome);
+                    }
+                    if (!permutations.contains(perm)) {
+                        permutations.add(perm);
+                    }
                 }
             }
         }
@@ -234,33 +250,38 @@ public class Algorithms {
     }
 
     /**
-     *
-     * @param numOfPerms number of permutations we should have
+     * @param numOfPerms   number of permutations we should have
      * @param evidenceVars names and outcomes of some variables
      * @return the probability of the evidenceVars
      */
     public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars) {
         double res = 0;
 
-        //Create an array list that contains all permutations on the *hidden* variables
-        ArrayList<HashMap<String, String>> perms;
-        perms = getPermsG(hidden);
-
-        //loop over all hidden permutations
-        for (int i = 0; i < numOfPerms; i++) {
+        if (hidden.size() == 0) {
             HashMap<String, String> currQuery = new HashMap<>();
             currQuery.putAll(evidenceVars);
-            currQuery.putAll(perms.get(i));
             res += calcEachPerm(currQuery);
             addAct1++;
-        }
 
+        } else {
+            //Create an array list that contains all permutations on the *hidden* variables
+            ArrayList<HashMap<String, String>> perms;
+            perms = getPermsG(hidden);
+
+            //loop over all hidden permutations
+            for (int i = 0; i < numOfPerms; i++) {
+                HashMap<String, String> currQuery = new HashMap<>();
+                currQuery.putAll(evidenceVars);
+                currQuery.putAll(perms.get(i));
+                res += calcEachPerm(currQuery);
+                addAct1++;
+            }
+        }
         addAct1--; //first addition does not count
         return res;
     }
 
     /**
-     *
      * @param currQuery a permutation on the variables that needs to be calculated
      * @return the probability of this currQuery
      */
@@ -289,9 +310,10 @@ public class Algorithms {
 
     /**
      * get the answer directly from the CPT
-     * @param queryVar the query variable
+     *
+     * @param queryVar              the query variable
      * @param queryRequestedOutcome the query variables outcome as it shows in the query
-     * @param evidenceVars all the variables names and outcomes as they're shown in the query
+     * @param evidenceVars          all the variables names and outcomes as they're shown in the query
      * @return the probability from the CPT
      */
     public double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
@@ -350,8 +372,9 @@ public class Algorithms {
 
     /**
      * checks if we can get the answer from the CPT
+     *
      * @param evidenceVars the names and the outcomes of the variables in the query
-     * @param queryVar the query variable
+     * @param queryVar     the query variable
      * @return true if we can get the answer from the CPT, false otherwise
      */
     public boolean checkForCPT(HashMap<String, String> evidenceVars, Variable queryVar) {
@@ -395,20 +418,21 @@ public class Algorithms {
         return this.multiAct2;
     }
 
-    public void addToEvidence(String query) {
-        for (Variable currVar : variables) {
-            String currVarName = currVar.getName();
-            if (query.contains(currVarName) && !this.evidence.contains(currVar)) {
-                this.evidence.add(currVar);
-            }
+    public void addToEvidence(String[] query) {
+
+        for (int i =0; i<query.length; i++){
+            String[] evi_name_outcome_split = query[i].split("=");
+            String evi_name = evi_name_outcome_split[0];
+            int index = network.find(evi_name);
+            evidence.add(network.get(index));
         }
     }
 
-    public void addToHidden(String query) {
-        for (Variable currVar : variables) {
-            String currVarName = currVar.getName();
-            if (!query.contains(currVarName) && !hidden.contains(currVar)) {
-                hidden.add(currVar);
+    public void addToHidden() {
+        for (int i = 0; i<network.size(); i++){
+            Variable variable = network.get(i);
+            if (!evidence.contains(variable)){
+                hidden.add(variable);
             }
         }
     }

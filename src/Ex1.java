@@ -176,8 +176,6 @@ public class Ex1 {
 
             if (algoWanted == 1) {          //1st algorithm: Joint distribution
                 Algorithms jd = new Algorithms(newQuery, network);
-                jd.addToHidden(newQuery);
-                jd.addToEvidence(newQuery);
                 jd.runAlgo(1);
 
                 output += jd.getAnswer() + "," + jd.getAddActions1() + "," + jd.getMultiplyActions1() + "\n";
@@ -188,8 +186,6 @@ public class Ex1 {
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination
                 Algorithms ve1 = new Algorithms(newQuery, network);
-                ve1.addToHidden(newQuery);
-                ve1.addToEvidence(newQuery);
                 ve1.runAlgo(2);
 
                 output += (ve1.getAnswer() + "," + ve1.getAddActions2() + "," + ve1.getMultiplyActions2()) + "\n";
@@ -200,8 +196,6 @@ public class Ex1 {
 
             else if (algoWanted == 3) {  //2nd algorithm: Variable elimination
                 Algorithms ve2 = new Algorithms(newQuery, network);
-                ve2.addToHidden(newQuery);
-                ve2.addToEvidence(newQuery);
                 ve2.runAlgo(3);
 
                 output += (ve2.getAnswer() + "," + ve2.getAddActions2() + "," + ve2.getMultiplyActions2()) + "\n";

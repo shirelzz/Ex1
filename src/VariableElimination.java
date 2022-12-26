@@ -116,13 +116,11 @@ public class VariableElimination {
             for (int j = 0; j < f_evi.size(); j++) {
                 Factor factor = f_evi.get(j);
                 factor.getNames().remove(evi.getName());
+                factors.remove(factor);
                 Factor r = factor.restrictFactor(evi, outcome, factor.getNames());
-                add_Act++;
                 if (r.size() > 1) {
                     factors.add(r);
                 }
-                Factor factor_to_remove = UtilFunctions.find(factor.getNames(), factors);
-                factors.remove(factor_to_remove);
             }
         }
 
@@ -131,7 +129,7 @@ public class VariableElimination {
             Variable hid = hidden.get(i);
             String hidName = hid.getName();
 
-            ArrayList<Factor> f_hid = getFactorsConVar(factors, hid); //find factors
+            ArrayList<Factor> f_hid = getFactorsConVar(factors, hid);
             if (eliminationOrder == 2) {  //algo = 2 , second algorithm
                 if (f_hid.size() >= 2) {
                     Factor[] f_hidden = sortFactors(f_hid);
@@ -145,7 +143,6 @@ public class VariableElimination {
                         factors.remove(f_hidden[j]);
                         factors.remove(f_hidden[j + 1]);
                         f_hidden[j + 1] = factor_n;
-//                        mul_Act++;
                         ArrayList<String> names = new ArrayList<>();
                         names.addAll(factor_1.getNames());
                         names.addAll(factor_2.getNames());
@@ -175,8 +172,11 @@ public class VariableElimination {
                     f_names.remove(hidName);
                     factors.remove(f_hid.get(0));
                     Factor factor_to_add = f_hid.get(0).sumOut(hid);
-                    factor_to_add.setNames(f_names);
-                    factors.add(factor_to_add);
+                    add_Act+=hid.getCounter();
+                    if (factor_to_add != null && factor_to_add.size()>1){
+                        factor_to_add.setNames(f_names);
+                        factors.add(factor_to_add);
+                    }
                 }
             }
 
@@ -189,7 +189,6 @@ public class VariableElimination {
 
             for (int s = 0; s < sorted.length - 1; s++) {
                 f = joinTwoFactors(sorted[s], sorted[s + 1]);
-//                mul_Act++;
 
                 if (s == sorted.length-2){
                     //normalize
@@ -288,10 +287,10 @@ public class VariableElimination {
                     double u = Double.parseDouble(x_line.get("val"));
                     double v = Double.parseDouble(y_line.get("val"));
                     double r = u * v;
+                    mul_Act++;
                     perm.put("val", String.valueOf(r));
                     result.addRow(perm);
                 }
-                mul_Act++;
             }
         }
         return result;

@@ -23,6 +23,7 @@ public class Variable {
         this.parentNodes = new ArrayList<>();
         this.probTable = new ArrayList<>(1);
         this.children = new ArrayList<>();
+        this.counter = 0;
     }
 
     public void setCounter(int c){
