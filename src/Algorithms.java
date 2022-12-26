@@ -14,12 +14,12 @@ public class Algorithms {
     private ArrayList<Variable> hidden;
     private BayesianNetwork network;
     private ArrayList<Variable> variables;
-    private double alpha = 0;
-    private int numOfPerm = 1;
-//    private ArrayList<Factor> factors;
-//    private Hashtable factor;
 
-
+    /**
+     * constructor
+     * @param query the query string as shown in the input file
+     * @param network the BN for the given variables
+     */
     Algorithms(String query, BayesianNetwork network) {
         this.query = query;
         this.network = network;
@@ -34,6 +34,10 @@ public class Algorithms {
 
     }
 
+    /**
+     * runs the algorithms
+     * @param algo the number of the algorithm required in the input file
+     */
     public void runAlgo(int algo) {
         String q = query;
         double ans = 0;
@@ -100,6 +104,12 @@ public class Algorithms {
     }
 
 
+    /**
+     * The first algorithm
+     * @param queryVar the query variable
+     * @param evidenceVars all the variables in this query
+     * @return the probability of this query
+     */
     public double jointProb(Variable queryVar, HashMap<String, String> evidenceVars) { //e.g. evidenceVars = {B=T,J=T,M=T}
         double ans;
 
@@ -108,16 +118,13 @@ public class Algorithms {
         for (Variable variable : hidden) {
             numOfPerms *= variable.getOutcomes().size();
         }
-        this.numOfPerm = numOfPerms;
 
-        double numeratorAns = calcProb(numOfPerms, evidenceVars, queryVar);
+        double numeratorAns = calcProb(numOfPerms, evidenceVars);
         String orgQueryOutcome = evidenceVars.get(queryVar.getName());
         double denominatorAns = 0;
 
 
-        /*
-            For the denominator we will sum all possible outcomes of the query variable
-        */
+        //For the denominator we will sum all possible outcomes of the query variable
         for (int i = 0; i < queryVar.getOutcomes().size(); i++) {
             HashMap<String, String> queryVarOutcome = new HashMap<>();
             queryVarOutcome.putAll(evidenceVars);            //copy all evidence variables including the query variable
@@ -125,18 +132,22 @@ public class Algorithms {
             if (orgQueryOutcome.equals(queryVar.getOutcomes().get(i))) {
                 denominatorAns += numeratorAns;
             } else {
-                denominatorAns += calcProb(numOfPerms, queryVarOutcome, queryVar);
+                denominatorAns += calcProb(numOfPerms, queryVarOutcome);
             }
             addAct1++;
         }
         addAct1--; //first addition does not count
         double alpha = normalize(denominatorAns);
-        this.alpha = numeratorAns;
         ans = alpha * numeratorAns;
         ans = formatAnswer(ans);
         return ans;
     }
 
+    /**
+     *
+     * @param res the result probability
+     * @return normalized result
+     */
     public double normalize(double res) {
         double alpha = 0;
         if (res > 0) {
@@ -145,6 +156,11 @@ public class Algorithms {
         return alpha;
     }
 
+    /**
+     *
+     * @param variables a list of variables
+     * @return a list of all the permutations on this variables
+     */
     public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
 
         int numOfPerms = 1;
@@ -217,7 +233,13 @@ public class Algorithms {
         return permutations;
     }
 
-    public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars, Variable queryVar) {
+    /**
+     *
+     * @param numOfPerms number of permutations we should have
+     * @param evidenceVars names and outcomes of some variables
+     * @return the probability of the evidenceVars
+     */
+    public double calcProb(int numOfPerms, HashMap<String, String> evidenceVars) {
         double res = 0;
 
         //Create an array list that contains all permutations on the *hidden* variables
@@ -237,6 +259,11 @@ public class Algorithms {
         return res;
     }
 
+    /**
+     *
+     * @param currQuery a permutation on the variables that needs to be calculated
+     * @return the probability of this currQuery
+     */
     public double calcEachPerm(HashMap<String, String> currQuery) { //e.g. currQuery = {J=F, A=T, M=t, B=F, E=T}}
         double res = 1;
 
@@ -260,6 +287,13 @@ public class Algorithms {
         return res;
     }
 
+    /**
+     * get the answer directly from the CPT
+     * @param queryVar the query variable
+     * @param queryRequestedOutcome the query variables outcome as it shows in the query
+     * @param evidenceVars all the variables names and outcomes as they're shown in the query
+     * @return the probability from the CPT
+     */
     public double getProbFromCPT(Variable queryVar, String queryRequestedOutcome, HashMap<String, String> evidenceVars) {
         double ans = 0;
         String outcome = "";
@@ -314,6 +348,12 @@ public class Algorithms {
         return ans;
     }
 
+    /**
+     * checks if we can get the answer from the CPT
+     * @param evidenceVars the names and the outcomes of the variables in the query
+     * @param queryVar the query variable
+     * @return true if we can get the answer from the CPT, false otherwise
+     */
     public boolean checkForCPT(HashMap<String, String> evidenceVars, Variable queryVar) {
         boolean flag = false;
         if (evidenceVars.size() - 1 == queryVar.getParentNodes().size()) { //then we might get the answer from the cpt
@@ -328,10 +368,6 @@ public class Algorithms {
         }
         return flag;
     }
-
-    //    public void heuristicElimination(){
-    //
-    //    }
 
     public double formatAnswer(double ans) {
         double value = ans;
@@ -375,57 +411,6 @@ public class Algorithms {
                 hidden.add(currVar);
             }
         }
-    }
-
-    public void removeUnnecessaryVars() {
-
-        ArrayList<Variable> leafNodes = new ArrayList<>();
-
-        for (Variable currVar : variables) {
-            if (!currVar.hasChildren()) {
-                leafNodes.add(currVar);
-            }
-        }
-
-        for (int i = 0; i < leafNodes.size(); i++) {
-            Variable currVar = variables.get(i);
-            if (!(hidden.contains(currVar) && evidence.contains(currVar))) {
-                leafNodes.remove(currVar);
-            }
-        }
-
-        for (int i = 0; i < variables.size(); i++) {
-
-        }
-
-
-    }
-
-    public void dropFromHidden() {
-        for (int i = 0; i < hidden.size(); i++) {
-            Variable var = hidden.get(i);
-            for (Variable evi : evidence) {
-                if (evi.getAncestors().contains(var)) {
-                    hidden.remove(var);
-                }
-            }
-        }
-    }
-
-    public String printHidden() {
-        String print = "";
-        for (Variable cptNode : this.hidden) {
-            print += cptNode.getName() + ", ";
-        }
-        return print;
-    }
-
-    public String printEvidence() {
-        String print = "";
-        for (Variable cptNode : this.evidence) {
-            print += cptNode.getName() + ", ";
-        }
-        return print;
     }
 
 }

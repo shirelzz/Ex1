@@ -9,13 +9,12 @@ public class Variable {
     private String name;
     private ArrayList<String> outcome;
     private ArrayList<String> parents;
-    private ArrayList<Variable> ancestors;
     private ArrayList<Variable> parentNodes;
     private ArrayList<String> children;
     private ArrayList<String> probTable;
-    private HashMap<String, Double> CPT;
+    private int counter;
 
-    /*
+    /**
     Constructor
      */
     Variable() throws IOException, SAXException {
@@ -24,8 +23,14 @@ public class Variable {
         this.parentNodes = new ArrayList<>();
         this.probTable = new ArrayList<>(1);
         this.children = new ArrayList<>();
-        this.CPT = new HashMap<>();
-        this.ancestors = new ArrayList<>();
+    }
+
+    public void setCounter(int c){
+        this.counter = c;
+    }
+
+    public int getCounter() {
+        return counter;
     }
 
     public void setName(String name){
@@ -46,6 +51,9 @@ public class Variable {
 
     public void addParent(String s) { parents.add(s);}
 
+    /**
+     * @return - parents names list
+     */
     public ArrayList<String> getParents(){
         return this.parents;
     }
@@ -56,6 +64,9 @@ public class Variable {
         }
     }
 
+    /**
+     * @return - parents nodes list
+     */
     public ArrayList<Variable> getParentNodes(){
         return this.parentNodes;
     }
@@ -72,39 +83,9 @@ public class Variable {
         return this.parentNodes.get(index);
     }
 
-    public void addAncestors(ArrayList<Variable> variables){
-
-        for (int i = 0; i<variables.size(); i++) {
-            Variable var = variables.get(i);
-            ArrayList<Variable> varParents = var.getParentNodes();
-            if (varParents.size() > 0) {
-                for (int j = 0; j < varParents.size(); j++) { //add parents (copy)
-                    if (!var.getAncestors().contains(varParents.get(j))) {
-                        var.addAncestor(varParents.get(j));
-                    }
-                }
-                for (int j = 0; j < varParents.size(); j++) { //add each parent's parents
-                    Variable gParent = varParents.get(j);
-                    if (gParent.hasParents()) {
-                        ArrayList<Variable> varGParents = gParent.getParentNodes();
-                        for (int k = 0; k < varGParents.size(); k++) {
-                            if (!var.getAncestors().contains(varGParents.get(k))) {
-                                var.addAncestor(varGParents.get(k));
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-
-    public void addAncestor(Variable ancestor) { ancestors.add(ancestor);}
-
-    public ArrayList<Variable> getAncestors(){
-        return this.ancestors;
-    }
-
+    /**
+     * @return true if this variable has parents, else returns false
+     */
     public boolean hasParents(){
         return this.getParents().size() > 0;
     }
@@ -117,10 +98,17 @@ public class Variable {
         return this.children;
     }
 
+    /**
+     * @return true if this variable has children, else returns false
+     */
     public boolean hasChildren(){
         return this.getChildren().size() > 0;
     }
 
+    /**
+     * add the table content as it shows in the xml file
+     * @param s the table content as it shows in the xml file
+     */
     public void addProbTable (String s) {
         probTable.add(s);
     }
@@ -129,21 +117,11 @@ public class Variable {
         return this.probTable;
     }
 
-    public void addToCPT(String s, double d){
-        this.CPT.put(s,d);
-    }
-
-    public HashMap<String, Double> getCPT(){
-        return this.CPT;
-    }
-
     public String printVariableDetails(){
         return "Name: " + this.name + "\n" +
                 "Outcomes: " + this.outcome + "\n" +
                 "Parents: " + this.parents + "\n" +
-                "Ancestors: " + this.ancestors + "\n" +
                 "Children: " + this.children + "\n" +
-                "CPT: " + this.CPT + "\n" +
                 "Table: " + this.probTable + "\n" ;
     }
 

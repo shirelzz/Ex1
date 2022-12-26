@@ -10,7 +10,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class XmlReader {
 
@@ -122,93 +121,6 @@ public class XmlReader {
 
                 }
 
-                //add ancestors
-                ArrayList<Variable> variables = new ArrayList<>();
-
-                for (int i = 0; i<network.size(); i++) {
-                    variables.add(network.get(i));
-                }
-
-                for (int i = 0; i<network.size(); i++){
-                    Variable cptNode = network.get(i);
-                    cptNode.addAncestors(variables);
-                }
-
-//                for (int i = 0; i<variables.size(); i++) { //trying to add more ancestors. program does not stop.
-//                    CptNode var = variables.get(i);
-//                    ArrayList<CptNode> varAnc = var.getAncestors();
-//
-//                    for (int r = 0; r < varAnc.size(); ) {
-//                        CptNode anc = varAnc.get(r);
-//                        if (anc.hasParents()) {
-//                            ArrayList<CptNode> ancParents = anc.getParentNodes();
-//                            for (int g = 0; g < ancParents.size(); g++) {
-//                                if (!var.getAncestors().contains(ancParents.get(g))) {
-//                                    var.addAncestor(ancParents.get(g));
-//                                }
-//                            }
-//
-//                        }
-//                    }
-//                }
-
-
-
-
-
-
-
-//                        ArrayList<CptNode> ancestorsToAdd = currDescendant.getParentNodes();
-
-
-
-//                        for (int j =0; j<ancestorsToAdd.size(); j++){
-//                            currDescendant.addAncestor(ancestorsToAdd.get(j));
-//                            for (int k = 0; k<)
-//                            currDescendant = currDescendant.getParentNodes().get(j);
-//                        }
-
-
-
-
-                    //add to cpt
-//                for (int i = 0; i<network.size(); i++) {
-//                    CptNode curr = network.get(i);
-//                    ArrayList<CptNode> currParentsNodes = curr.getParentNodes();
-//                    ArrayList<String> currParentsNames = curr.getParents();
-//                    ArrayList<String> currOutcomes = curr.getOutcomes();
-//                    ArrayList<String> currTable = curr.getProbTable();
-//
-//                    if (currParentsNodes.size()>0){
-//                        for (int j = 0; j<currOutcomes.size(); j++){
-//                            int numOfOutcomes = currOutcomes.size();
-//                            int index = 0;
-//                            while (index<numOfOutcomes){
-//                                index++;
-//                            }
-//
-//                                String s = "P(" + curr.getName() + "=" + currOutcomes.get(j) + " | ";
-//                            for (int k = currParentsNodes.size()-1 ; k>=0; k--){
-//                                s += currParentsNames.get(k) + "=" + currParentsNodes.get(k)  + "="
-//                            }
-//
-//                            int tableIndex =
-//
-//                            curr.addToCPT();
-//                        }
-//                    }
-//                    else {
-//                        for (String currOutcome : currOutcomes) {
-//                            for (String currProb : currTable) {
-//                                String s = "P(" + curr.getName() + "=" + currOutcome;
-//                                double prob = Double.parseDouble(currProb);
-//                                curr.addToCPT(s, prob);
-//                            }
-//                        }
-//                    }
-//                }
-
-
 
                 } catch (ParserConfigurationException e) {
                 e.printStackTrace();
@@ -220,19 +132,5 @@ public class XmlReader {
         }
         return network;
     }
-//    public void addAncestors(ArrayList<CptNode> network){
-//
-//        for (int i = 0; i<network.size(); i++){
-//            CptNode var = network.get(i);
-//            if (var.getParentNodes().size() == 0){
-//                return;
-//            }
-//            else {
-//                for (int j = 0; j<var.getParentNodes().size(); j++) {
-//                    var.addAncestor(var.getParentNodes().get(j));
-//                }
-//                addAncestors(var.getParentNodes());
-//            }
-//        }
-//    }
+
 }

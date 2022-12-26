@@ -180,16 +180,10 @@ public class Ex1 {
                 jd.addToEvidence(newQuery);
                 jd.runAlgo(1);
 
-                System.out.println("hid: " + jd.printHidden());
-                System.out.println("evi: " + jd.printEvidence());
-
-
                 output += jd.getAnswer() + "," + jd.getAddActions1() + "," + jd.getMultiplyActions1() + "\n";
                 System.out.println(query + ":" + "\n" + "Answer = " + jd.getAnswer() + "\n" +
                         "Total number of additions = " + jd.getAddActions1() + "\n" +
-                        "Total number of multiplications = " + jd.getMultiplyActions1() + "\n" +
-                        "hidden: " + jd.printHidden() + "\n" +
-                        "evidence: " + jd.printEvidence() + "\n"
+                        "Total number of multiplications = " + jd.getMultiplyActions1() + "\n"
                 );
 
             } else if (algoWanted == 2) {  //2nd algorithm: Variable elimination
@@ -203,6 +197,7 @@ public class Ex1 {
                         "Total number of additions = " + ve1.getAddActions2() + "\n" +
                         "Total number of multiplications = " + ve1.getMultiplyActions2() + "\n");
             }
+
             else if (algoWanted == 3) {  //2nd algorithm: Variable elimination
                 Algorithms ve2 = new Algorithms(newQuery, network);
                 ve2.addToHidden(newQuery);
@@ -214,7 +209,6 @@ public class Ex1 {
                         "Total number of additions = " + ve2.getAddActions2() + "\n" +
                         "Total number of multiplications = " + ve2.getMultiplyActions2() + "\n");
             }
-
 
         }
 

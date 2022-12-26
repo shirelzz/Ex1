@@ -14,3 +14,6 @@ P(J=T|M=T),3
 P(J=T|A=F),1
 P(J=T|A=F),2
 P(J=T|A=F),3
+P(B=T|J=T),1
+P(B=T|J=T),2
+P(B=T|J=T),3

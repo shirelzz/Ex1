@@ -11,7 +11,14 @@ public class VariableElimination {
     private int mul_Act;
     private int add_Act;
 
-
+    /**
+     * constructor
+     * @param evidence list of the evidence variables
+     * @param hidden list of the hidden variables
+     * @param variables list of all the variables
+     * @param bn bayesian network
+     * @param queryName_Outcome the name and the outcome of query variable
+     */
     VariableElimination(ArrayList<Variable> evidence, ArrayList<Variable> hidden, ArrayList<Variable> variables, BayesianNetwork bn, String[] queryName_Outcome) {
         this.evidence = evidence;
         this.variables = variables;
@@ -22,6 +29,11 @@ public class VariableElimination {
         this.queryName_Outcome = queryName_Outcome;
     }
 
+    /**
+     * sorts a list of variables by their names
+     * @param list list of variables
+     * @return the list sorted
+     */
     public ArrayList<Variable> sortByName(ArrayList<Variable> list) {
         ArrayList<String> names = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
@@ -38,9 +50,15 @@ public class VariableElimination {
         return list;
     }
 
+    /**
+     * variable elimination algorithm function
+     *
+     * @param queryVar the query variable
+     * @param evidenceVars list of the evidence variables (that we got their outcome values by the query)
+     * @param eliminationOrder the elimination order (as required in the input file)
+     * @return the probability of this query
+     */
     public double varElm(Variable queryVar, HashMap<String, String> evidenceVars, int eliminationOrder) {
-
-        double pre;
 
         //define factors
         ArrayList<Factor> factors = new ArrayList<>();
@@ -139,8 +157,8 @@ public class VariableElimination {
                             //sum out
                             factors.remove(factor_n);
                             factor_n = factor_n.sumOut(hid);
+                            add_Act += hid.getCounter();
                             if (factor_n != null) {
-//                                add_Act++;
                                 ArrayList<String> names_ = new ArrayList<>();
                                 names_.addAll(factor_1.getNames());
                                 names_.addAll(factor_2.getNames());
@@ -153,8 +171,12 @@ public class VariableElimination {
                     }
 
                 } else {
+                    ArrayList<String> f_names = f_hid.get(0).getNames();
+                    f_names.remove(hidName);
                     factors.remove(f_hid.get(0));
-                    factors.add(f_hid.get(0).sumOut(hid));
+                    Factor factor_to_add = f_hid.get(0).sumOut(hid);
+                    factor_to_add.setNames(f_names);
+                    factors.add(factor_to_add);
                 }
             }
 
@@ -201,6 +223,12 @@ public class VariableElimination {
         return answer;
     }
 
+    /**
+     * joins two factors
+     * @param X the first factor
+     * @param Y the second factor
+     * @return new factor that is a multiplication of X and Y
+     */
     public Factor joinTwoFactors(Factor X, Factor Y) {
 
         // get the outcome hashmaps for X and Y
@@ -260,10 +288,10 @@ public class VariableElimination {
                     double u = Double.parseDouble(x_line.get("val"));
                     double v = Double.parseDouble(y_line.get("val"));
                     double r = u * v;
-                    mul_Act++;
                     perm.put("val", String.valueOf(r));
                     result.addRow(perm);
                 }
+                mul_Act++;
             }
         }
         return result;
@@ -346,7 +374,6 @@ public class VariableElimination {
         return permutations;
     }
 
-
     /**
      *
      * @param factors list of factors
@@ -365,6 +392,13 @@ public class VariableElimination {
         return factorsContVar;
     }
 
+    /**
+     * sorts a list of factors by size. If the factors are in the same size, it sorts by the ASCII code values
+     * of the names of the variables in the factors
+     *
+     * @param factors list of factors
+     * @return A sorted list of these factors
+     */
     public Factor[] sortFactors(ArrayList<Factor> factors) {
 
         Factor[] sorted_factors = new Factor[factors.size()];
@@ -392,6 +426,12 @@ public class VariableElimination {
         return sorted_factors;
     }
 
+    /**
+     * compares the sizes of two factors. If X and Y are of same size it compares them by their ASCII values
+     * @param X factor
+     * @param Y factor
+     * @return true if X is bigger (size/ASCII) than Y, otherwise it returns false.
+     */
     public boolean CompareSize(Factor X, Factor Y) {
         if (X.size() > Y.size()) {
             return true;
@@ -433,4 +473,5 @@ public class VariableElimination {
     public double getAnswer() {
         return this.answer;
     }
+
 }

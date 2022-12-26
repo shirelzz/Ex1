@@ -149,15 +149,12 @@ public class Factor {
         ArrayList<String> name = new ArrayList<>();
         Factor newFactor = new Factor(this.hidden, this.evidence, name);
 
-        //?
         if (factor.size() == 2) {
             return null;
-//            newFactor.setMain_name(variable.getName());
-//            HashMap<String, String> new_row = new HashMap<>();
-//            new_row.put("val", "1.0");
-//            newFactor.addRow(new_row);
+
         } else {
 
+            int c = 0;
             double[] values = new double[factor.size() / variable.getOutcomes().size()];
             HashMap<String, String> row_to_add;
 
@@ -184,9 +181,12 @@ public class Factor {
                             l = 0;
                         }
                         values[l] += value2;
+                        c++;
                         row_to_add.put("val", String.valueOf(values[l]));
                     }
                 }
+                variable.setCounter(c);
+
                 if (i == 0) {
                     newFactor.addRow(row_to_add);
                 } else if (!newFactor.containsPerm(row_to_add)) {
