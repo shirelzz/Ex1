@@ -1,9 +1,6 @@
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Ex1 {
@@ -206,24 +203,24 @@ public class Ex1 {
                         "Total number of additions = " + ve1.getAddActions2() + "\n" +
                         "Total number of multiplications = " + ve1.getMultiplyActions2() + "\n");
             }
-//            else if (algoWanted == 3) {  //2nd algorithm: Variable elimination
-//                Algorithms ve2 = new Algorithms(newQuery, network);
-//                ve2.addToHidden(newQuery);
-//                ve2.addToEvidence(newQuery);
-//                ve2.runAlgo(3);
-//
-//                output += (ve2.getAnswer() + "," + ve2.getAddActions2() + "," + ve2.getMultiplyActions2()) + "\n";
-//                System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
-//                        "Total number of additions = " + ve2.getAddActions2() + "\n" +
-//                        "Total number of multiplications = " + ve2.getMultiplyActions2() + "\n");
-//            }
+            else if (algoWanted == 3) {  //2nd algorithm: Variable elimination
+                Algorithms ve2 = new Algorithms(newQuery, network);
+                ve2.addToHidden(newQuery);
+                ve2.addToEvidence(newQuery);
+                ve2.runAlgo(3);
+
+                output += (ve2.getAnswer() + "," + ve2.getAddActions2() + "," + ve2.getMultiplyActions2()) + "\n";
+                System.out.println(query + ":" + "\n" + "Answer = " + ve2.getAnswer() + "\n" +
+                        "Total number of additions = " + ve2.getAddActions2() + "\n" +
+                        "Total number of multiplications = " + ve2.getMultiplyActions2() + "\n");
+            }
 
 
         }
 
         //extract output text file
         try {
-            FileWriter myWriter = new FileWriter("output.txt");
+            BufferedWriter myWriter = new BufferedWriter(new FileWriter("output.txt"));
             myWriter.write(output);
             myWriter.close();
             System.out.println("Kululu!!");

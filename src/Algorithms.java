@@ -65,7 +65,7 @@ public class Algorithms {
                     ans = formatAnswer(ans);
                     answer = ans;
                 }
-                if (algo == 2) {
+                if (algo == 2 || algo == 3) {
                     VariableElimination ve = new VariableElimination(evidence,hidden,variables,network, queryName_Outcome);
                     ve.varElm(queryVar, evidenceVars, 2);
                     ans = ve.getAnswer();
@@ -145,59 +145,73 @@ public class Algorithms {
         return alpha;
     }
 
-    public ArrayList<HashMap<String, String>> getPerms(int numOfPerms) {
+    public ArrayList<HashMap<String, String>> getPermsG(ArrayList<Variable> variables) {
+
+        int numOfPerms = 1;
+        for (Variable variable : variables) {
+            numOfPerms *= variable.getOutcomes().size();
+        }
 
         ArrayList<HashMap<String, String>> permutations = new ArrayList<>();
-        int[] outcomesSizes = new int[hidden.size()];
-        int hiddenSize = hidden.size();
+        int[] outcomesSizes = new int[variables.size()];
+        int varSize = variables.size();
 
-        for (int i = 0; i < hiddenSize; i++) {
-            Variable curr = hidden.get(i);
+        for (int i = 0; i < varSize; i++) {
+            Variable curr = variables.get(i);
             outcomesSizes[i] = curr.getOutcomes().size();
         }
 
-        int[] outcomeSizes_new = new int[hiddenSize];
-        int m = outcomesSizes[0];
-        outcomesSizes[0] = 0;
-        int temp = outcomesSizes[1];
-        outcomeSizes_new[1] = m;
-        m = temp;
-
-        for (int i = 2; i < outcomesSizes.length; i++) {
-            m *= outcomesSizes[i - 1];
-            outcomeSizes_new[i] = m;
-        }
-
-        String name;
-        String outcome;
-        int[] outcomes = new int[hiddenSize];
-
-        for (int i = 0; i < numOfPerms; i++) {
-            HashMap<String, String> perm = new HashMap<>();
-            for (int j = 0; j < hiddenSize; j++) {
-                Variable currHidden = hidden.get(j);
-                name = currHidden.getName();
-                int numOfOutcomes = currHidden.getOutcomes().size();
-                if (outcomes[j] >= numOfOutcomes) {
-                    outcomes[j] = 0;
-                }
-                outcome = currHidden.getOutcomes().get(outcomes[j]);
-                if (j == 0) {
-                    outcomes[j]++;
-                } else {
-                    if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
-                        if (outcomes[j] + 1 >= numOfOutcomes) {
-                            outcomes[j] = 0;
-                        } else {
-                            outcomes[j]++;
-                        }
-                        outcome = currHidden.getOutcomes().get(outcomes[j]);
-                    }
-                }
+        if (variables.size() == 1) {
+            ArrayList<String> outcomes = variables.get(0).getOutcomes();
+            String name = variables.get(0).getName();
+            for (String outcome : outcomes) {
+                HashMap<String, String> perm = new HashMap<>();
                 perm.put(name, outcome);
-            }
-            if (!permutations.contains(perm)) {
                 permutations.add(perm);
+            }
+        } else {
+
+            int[] outcomeSizes_new = new int[varSize];
+            int m = outcomesSizes[0];
+            outcomeSizes_new[0] = 0;
+            outcomeSizes_new[1] = outcomesSizes[0];
+
+            for (int i = 2; i < outcomesSizes.length; i++) {
+                m *= outcomesSizes[i - 1];
+                outcomeSizes_new[i] = m;
+            }
+
+            String name;
+            String outcome;
+            int[] outcomes = new int[varSize];
+
+            for (int i = 0; i < numOfPerms; i++) {
+                HashMap<String, String> perm = new HashMap<>();
+                for (int j = 0; j < varSize; j++) {
+                    Variable currVar = variables.get(j);
+                    name = currVar.getName();
+                    int numOfOutcomes = currVar.getOutcomes().size();
+                    if (outcomes[j] >= numOfOutcomes) {
+                        outcomes[j] = 0;
+                    }
+                    outcome = currVar.getOutcomes().get(outcomes[j]);
+                    if (j == 0) {
+                        outcomes[j]++;
+                    } else {
+                        if ((i % outcomeSizes_new[j] == 0) && (i != 0)) {
+                            if (outcomes[j] + 1 >= numOfOutcomes) {
+                                outcomes[j] = 0;
+                            } else {
+                                outcomes[j]++;
+                            }
+                            outcome = currVar.getOutcomes().get(outcomes[j]);
+                        }
+                    }
+                    perm.put(name, outcome);
+                }
+                if (!permutations.contains(perm)) {
+                    permutations.add(perm);
+                }
             }
         }
         return permutations;
@@ -208,7 +222,7 @@ public class Algorithms {
 
         //Create an array list that contains all permutations on the *hidden* variables
         ArrayList<HashMap<String, String>> perms;
-        perms = getPerms(numOfPerms);
+        perms = getPermsG(hidden);
 
         //loop over all hidden permutations
         for (int i = 0; i < numOfPerms; i++) {

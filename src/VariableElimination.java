@@ -134,40 +134,22 @@ public class VariableElimination {
                         factor_n.setNames(names);
                         factors.add(factor_n);
 
-//                            if (factor_n.size() <= 1) {
-//                                String name = factor_n.getNames().get(0);
-//                                Factor factor_to_remove = UtilFunctions.find(name, factors);
-//                                factors.remove(factor_to_remove);
-//                            }
-
                         if (j == f_hid.size() - 2) {
                             //sum out
                             factors.remove(factor_n);
                             factor_n = factor_n.sumOut(hid);
-                            add_Act++;
-                            ArrayList<String> names_ = new ArrayList<>();
-                            names_.addAll(factor_1.getNames());
-                            names_.addAll(factor_2.getNames());
-                            names_ = UtilFunctions.removeDuplicates(names_);
-                            names_.remove(hidName);
-                            factor_n.setNames(names_);
-                            factors.add(factor_n);
+                            if (factor_n != null){
+                                add_Act++;
+                                ArrayList<String> names_ = new ArrayList<>();
+                                names_.addAll(factor_1.getNames());
+                                names_.addAll(factor_2.getNames());
+                                names_ = UtilFunctions.removeDuplicates(names_);
+                                names_.remove(hidName);
+                                factor_n.setNames(names_);
+                                factors.add(factor_n);
+                            }
                         }
                     }
-
-
-//                    for (int m = 0; m < factors.size(); m++) {
-//                        Factor curr = factors.get(m);
-//                        String m_name = curr.getMain_name();
-//                        for (int n = 0; n < sumOutHiddenFs.size(); n++) {
-//                            Factor curr_hid = sumOutHiddenFs.get(n);
-//
-//                            if (curr_hid.getMain_name().equals(curr.getMain_name())) {
-//                                factors.remove(m);
-//                                factors.add(curr_hid);
-//                            }
-//                        }
-//                    }
 
                 } else {
                     factors.remove(f_hid.get(0));
@@ -175,9 +157,7 @@ public class VariableElimination {
                 }
             }
 
-
         }
-
 
         //multiply all remaining factors
         if (factors.size() >= 2) { /////???????
@@ -331,10 +311,8 @@ public class VariableElimination {
 
             int[] outcomeSizes_new = new int[varSize];
             int m = outcomesSizes[0];
-            outcomesSizes[0] = 0;
-            int temp = outcomesSizes[1];
-            outcomeSizes_new[1] = m;
-            m = temp;
+            outcomeSizes_new[0] = 0;
+            outcomeSizes_new[1] = outcomesSizes[0];
 
             for (int i = 2; i < outcomesSizes.length; i++) {
                 m *= outcomesSizes[i - 1];
@@ -399,12 +377,17 @@ public class VariableElimination {
         // using bubble sort algorithm
         for (int i = 0; i < sorted_factors.length; i++) {
             for (int j = 0; j < sorted_factors.length - 1; j++) {
-                if (CompareSize(sorted_factors[j], sorted_factors[j + 1])) {
+                if (sorted_factors[j + 1] == null){
+                    factors.remove(sorted_factors[j + 1]);
+                }
+                if (sorted_factors[j + 1] != null) {
+                    if (CompareSize(sorted_factors[j], sorted_factors[j + 1])) {
 
-                    // swap factors
-                    Factor temp = sorted_factors[j];
-                    sorted_factors[j] = sorted_factors[j + 1];
-                    sorted_factors[j + 1] = temp;
+                        // swap factors
+                        Factor temp = sorted_factors[j];
+                        sorted_factors[j] = sorted_factors[j + 1];
+                        sorted_factors[j + 1] = temp;
+                    }
                 }
             }
         }
@@ -417,23 +400,28 @@ public class VariableElimination {
         } else if (X.size() < Y.size()) {
             return false;
         } else {
-            // compare by ASCII values
-            List<String> X_names_list = X.getNames();
-            List<String> Y_names_list = Y.getNames();
+            if (X.size() == 0){
+                return false;
+            }
+            else {
+                // compare by ASCII values
+                List<String> X_names_list = X.getNames();
+                List<String> Y_names_list = Y.getNames();
 
-            int X_names_ascii = 0;
-            for (String name : X_names_list) {
-                for (int i = 0; i < name.length(); i++) {
-                    X_names_ascii += name.charAt(i);
+                int X_names_ascii = 0;
+                for (String name : X_names_list) {
+                    for (int i = 0; i < name.length(); i++) {
+                        X_names_ascii += name.charAt(i);
+                    }
                 }
-            }
-            int Y_names_ascii = 0;
-            for (String name : Y_names_list) {
-                for (int i = 0; i < name.length(); i++) {
-                    Y_names_ascii += name.charAt(i);
+                int Y_names_ascii = 0;
+                for (String name : Y_names_list) {
+                    for (int i = 0; i < name.length(); i++) {
+                        Y_names_ascii += name.charAt(i);
+                    }
                 }
+                return X_names_ascii >= Y_names_ascii;
             }
-            return X_names_ascii >= Y_names_ascii;
         }
     }
 
